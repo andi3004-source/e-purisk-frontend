@@ -18,12 +18,12 @@ export default function DashboardPage() {
         <Navbar />
 
         {/* CONTENT */}
-        <div className="p-6">
+        <div className="p-6 text-gray-900">
 
           {/* FILTER */}
           <div className="bg-white p-4 rounded-xl shadow mb-6 flex justify-between items-center">
             <div>
-              <p className="text-sm text-gray-500">Tahun</p>
+              <p className="text-sm text-gray-800">Tahun</p>
               <select className="border p-2 rounded">
                 <option>2026</option>
                 <option>2025</option>
@@ -55,7 +55,7 @@ export default function DashboardPage() {
                   />
                   <div>
                     <p className="font-semibold text-sm">Nama User</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-800">
                       Jabatan / Instansi
                     </p>
                   </div>
@@ -78,7 +78,7 @@ export default function DashboardPage() {
                   />
                   <div>
                     <p className="font-semibold text-sm">Nama Pengelola</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-800">
                       Jabatan Pengelola
                     </p>
                   </div>

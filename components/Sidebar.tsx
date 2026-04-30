@@ -11,6 +11,14 @@ export default function Sidebar() {
   const [openKomitmen, setOpenKomitmen] = useState(false);
   const [openRisiko, setOpenRisiko] = useState(false);
 
+  // 🔥 TAMBAHAN ROLE
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    const r = localStorage.getItem("role");
+    setRole(r || "");
+  }, []);
+
   return (
     <div className="w-64 bg-blue-900 text-white min-h-screen flex flex-col">
 
@@ -32,72 +40,80 @@ export default function Sidebar() {
       {/* MENU */}
       <div className="p-4 space-y-2 flex-1">
 
-        <MenuItem name="Dashboard" path="/dashboard" />
-        <MenuItem name="Daftar Pegawai" path="/pegawai" />
-        <MenuItem name="Loss Event Database" path="/loss" />
+        {/* ================= BALAI ================= */}
+        {role === "balai" && (
+          <>
+            <MenuItem name="Dashboard" path="/dashboard" />
+            <MenuItem name="Daftar Pegawai" path="/pegawai" />
+            <MenuItem name="Loss Event Database" path="/loss" />
 
-        {/* KOMITMEN MR */}
-        <div>
-
-          <div
-            onClick={() => setOpenKomitmen(!openKomitmen)}
-            className="p-3 rounded-lg flex justify-between cursor-pointer hover:bg-blue-800"
-          >
-            <span>📋 Daftar Komitmen MR</span>
-            <span>{openKomitmen ? "▲" : "▼"}</span>
-          </div>
-
-          {openKomitmen && (
-            <div className="ml-4 mt-2 space-y-2">
-
-              {/* Komitmen */}
-              <SubItem name="Komitmen MR" path="/komitmen" />
-
-              {/* RISIKO */}
-              <div>
-
-                <div
-                  onClick={() => setOpenRisiko(!openRisiko)}
-                  className="p-2 rounded hover:bg-blue-700 cursor-pointer"
-                >
-                  ➤ Risiko
-                </div>
-
-                {openRisiko && (
-                  <div className="ml-4 space-y-2">
-
-                    <SubItem name="Risiko Korupsi" path="/risiko/korupsi" />
-
-                    {[
-                      "Keuangan",
-                      "Reputasi",
-                      "Hukum",
-                      "Kecelakaan Kerja",
-                      "Layanan",
-                      "Kinerja",
-                      "SPBE",
-                    ].map((r) => (
-                      <SubItem
-                        key={r}
-                        name={r}
-                        path={`/risiko/${r.toLowerCase().replace(/\s+/g, "-")}`}
-                      />
-                    ))}
-
-                  </div>
-                )}
-
+            {/* KOMITMEN */}
+            <div>
+              <div
+                onClick={() => setOpenKomitmen(!openKomitmen)}
+                className="p-3 rounded-lg flex justify-between cursor-pointer hover:bg-blue-800"
+              >
+                <span>📋 Daftar Komitmen MR</span>
+                <span>{openKomitmen ? "▲" : "▼"}</span>
               </div>
 
-              {/* PROFIL RISIKO */}
-              <SubItem name="Profil Risiko" path="/risiko/profil" />
+              {openKomitmen && (
+                <div className="ml-4 mt-2 space-y-2">
 
+                  <SubItem name="Komitmen MR" path="/komitmen" />
+
+                  {/* RISIKO */}
+                  <div>
+                    <div
+                      onClick={() => setOpenRisiko(!openRisiko)}
+                      className="p-2 rounded hover:bg-blue-700 cursor-pointer"
+                    >
+                      ➤ Risiko
+                    </div>
+
+                    {openRisiko && (
+                      <div className="ml-4 space-y-2">
+
+                        <SubItem name="Risiko Korupsi" path="/risiko/korupsi" />
+
+                        {[
+                          "Keuangan",
+                          "Reputasi",
+                          "Hukum",
+                          "Kecelakaan Kerja",
+                          "Layanan",
+                          "Kinerja",
+                          "SPBE",
+                        ].map((r) => (
+                          <SubItem
+                            key={r}
+                            name={r}
+                            path={`/risiko/${r.toLowerCase().replace(/\s+/g, "-")}`}
+                          />
+                        ))}
+
+                      </div>
+                    )}
+                  </div>
+
+                  <SubItem name="Profil Risiko" path="/profil" />
+
+                </div>
+              )}
             </div>
-          )}
 
-        </div>
+            <MenuItem name="Panduan Aplikasi" path="/panduan" />
+          </>
+        )}
 
-        <MenuItem name="Panduan Aplikasi" path="/panduan" />
+        {/* ================= VERIFIKATOR ================= */}
+        {role === "verifikator" && (
+          <>
+            <MenuItem name="Dashboard Verifikator" path="/verifikator" />
+            <MenuItem name="Approval Komitmen" path="/verifikator" />
+            <MenuItem name="Monitoring Risiko" path="/verifikator/monitoring" />
+          </>
+        )}
 
       </div>
     </div>

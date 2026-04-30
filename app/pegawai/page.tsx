@@ -3,7 +3,7 @@
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /* TYPE DATA */
 type Pegawai = {
@@ -16,35 +16,26 @@ type Pegawai = {
 export default function PegawaiPage() {
   const router = useRouter();
 
-  /* 🔥 DATA DUMMY (BIAR KELIHATAN HIDUP) */
-  const [dataPegawai, setDataPegawai] = useState<Pegawai[]>([
-    {
-      id: 1,
-      nama: "Budi Santoso",
-      nip: "123456789",
-      jabatan: "Kepala Balai",
-    },
-    {
-      id: 2,
-      nama: "Andi Pratama",
-      nip: "987654321",
-      jabatan: "Staff",
-    },
-  ]);
+  const [dataPegawai, setDataPegawai] = useState<Pegawai[]>([]);
+
+  // ✅ PINDAHIN KE DALAM COMPONENT
+  useEffect(() => {
+  const stored = JSON.parse(localStorage.getItem("pegawai") || "[]");
+  setDataPegawai(stored);
+}, []);
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-
       <Sidebar />
 
       <div className="flex-1">
         <Navbar />
 
-        <div className="p-6">
+        <div className="p-6 text-gray-900">
 
           {/* HEADER */}
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-xl font-bold">Daftar Pegawai</h1>
+            <h1 className="text-xl font-bold text-black">Daftar Pegawai</h1>
 
             <button
               onClick={() => router.push("/pegawai/tambah")}
@@ -56,9 +47,7 @@ export default function PegawaiPage() {
 
           {/* TABLE */}
           <div className="bg-white rounded-xl shadow p-4">
-
-            <table className="w-full text-sm">
-
+            <table className="w-full text-sm text-gray-900">
               <thead className="bg-blue-900 text-white">
                 <tr>
                   <th className="p-3 text-left">Nama</th>
@@ -71,7 +60,7 @@ export default function PegawaiPage() {
               <tbody>
                 {dataPegawai.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="text-center p-6 text-gray-400">
+                    <td colSpan={4} className="text-center p-6 text-gray-600">
                       Belum ada data pegawai
                     </td>
                   </tr>
@@ -84,9 +73,7 @@ export default function PegawaiPage() {
 
                       <td className="p-3 text-center space-x-2">
                         <button
-                          onClick={() =>
-                            alert("UI Edit (belum backend)")
-                          }
+                          onClick={() => alert("UI Edit (belum backend)")}
                           className="bg-blue-500 text-white px-3 py-1 rounded text-xs"
                         >
                           Edit
@@ -105,9 +92,7 @@ export default function PegawaiPage() {
                   ))
                 )}
               </tbody>
-
             </table>
-
           </div>
 
         </div>

@@ -14,14 +14,28 @@ export default function LoginPage() {
   const handleSubmit = (e: any) => {
     e.preventDefault();
 
-    if (email && password) {
-      // ✅ FIX UTAMA
-      localStorage.setItem("isLogin", "true");
-      localStorage.setItem("user", email);
-
-      router.push("/dashboard");
-    } else {
+    if (!email || !password) {
       alert("Email & Password wajib diisi!");
+      return;
+    }
+
+    // 🔥 ROLE LOGIC (sementara dummy dulu)
+    let role = "balai";
+
+    if (email === "verifikator@gmail.com") {
+      role = "verifikator";
+    }
+
+    // ✅ SIMPAN LOGIN
+    localStorage.setItem("isLogin", "true");
+    localStorage.setItem("user", email);
+    localStorage.setItem("role", role);
+
+    // 🔥 REDIRECT SESUAI ROLE
+    if (role === "verifikator") {
+      router.push("/verifikator");
+    } else {
+      router.push("/dashboard");
     }
   };
 
