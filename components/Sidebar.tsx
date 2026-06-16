@@ -12,13 +12,13 @@ export default function Sidebar() {
   const [openRisiko, setOpenRisiko] = useState(false);
 
   // 🔥 TAMBAHAN ROLE
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState("verifikator");
 
-  useEffect(() => {
-    const r = localStorage.getItem("role");
-    setRole(r || "");
-  }, []);
-
+useEffect(() => {
+  const r = localStorage.getItem("role");
+  console.log("ROLE =", r);
+  setRole(r || "verifikator");
+}, []);
   return (
     <div className="w-64 bg-blue-900 text-white min-h-screen flex flex-col">
 
@@ -84,6 +84,7 @@ export default function Sidebar() {
                           "Layanan",
                           "Kinerja",
                           "SPBE",
+                          "lainnya",
                         ].map((r) => (
                           <SubItem
                             key={r}

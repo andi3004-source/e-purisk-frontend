@@ -57,21 +57,21 @@ export default function TambahKomitmenPage() {
     const newData = {
       id: Date.now(),
       periode: form.tahun,
-      level: "UPR T3",
-      unit: "BALAI WILAYAH SUNGAI BENGAWAN SOLO",
+      level: "UPR T2",
+      unit: "",
 
-      pemilik: form.jabatan_pemilik,
-      nip_pemilik: form.nip_pemilik,
-      jabatan_pemilik: form.jabatan_pemilik,
+      pemilik: form.pemilik,
+  nip_pemilik: form.nip_pemilik,
+  jabatan_pemilik: form.jabatan_pemilik,
 
-      pengelola: form.jabatan_pengelola,
-      nip_pengelola: form.nip_pengelola,
-      jabatan_pengelola: form.jabatan_pengelola,
+  pengelola: form.pengelola,
+  nip_pengelola: form.nip_pengelola,
+  jabatan_pengelola: form.jabatan_pengelola,
 
-      anggaran: form.anggaran,
-      link: form.link,
+  anggaran: form.anggaran,
+  link: form.link,
 
-      status: "Draft",
+  status: "Draft",
     };
 
     const updated = [...existing, newData];

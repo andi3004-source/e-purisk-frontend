@@ -19,9 +19,11 @@ export default function VerifikatorPage() {
     }
 
     // 🔥 AMBIL DATA KOMITMEN (dummy dari localStorage)
-    const komitmen = JSON.parse(localStorage.getItem("komitmen") || "[]");
+   const verifikatorData = JSON.parse(
+  localStorage.getItem("verifikator-data") || "[]"
+);
 
-    setData(komitmen);
+setData(verifikatorData);
   }, []);
 
   // ✅ APPROVE
@@ -31,7 +33,10 @@ export default function VerifikatorPage() {
     );
 
     setData(updated);
-    localStorage.setItem("komitmen", JSON.stringify(updated));
+   localStorage.setItem(
+  "verifikator-data",
+  JSON.stringify(updated)
+);
   };
 
   // ❌ REJECT
@@ -41,7 +46,10 @@ export default function VerifikatorPage() {
     );
 
     setData(updated);
-    localStorage.setItem("komitmen", JSON.stringify(updated));
+    localStorage.setItem(
+  "verifikator-data",
+  JSON.stringify(updated)
+);
   };
 
   return (
@@ -112,13 +120,12 @@ export default function VerifikatorPage() {
                         <td className="p-2 space-x-2">
                           <button
                             onClick={() =>
-                              router.push(`/komitmen/${item.id}`)
-                            }
+                                 router.push(`/verifikator/detail/${item.id}`)
+                     }
                             className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                          >
-                            Detail
-                          </button>
-
+>
+                             Detail
+                        </button>
                           <button
                             onClick={() => handleApprove(item.id)}
                             className="bg-green-600 text-white px-2 py-1 rounded text-xs"

@@ -1,24 +1,13 @@
 "use client";
-
+import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import React from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 export default function TambahProfilRisikoPage() {
-type Komitmen = {
-  id: number;
-  unit: string;
-  level: string;
-  periode: string;
-  pemilik: string;
-  jabatan_pemilik: string;
-  nip_pemilik: string;
-  pengelola: string;
-  jabatan_pengelola: string;
-  nip_pengelola: string;
-};
+
   const router = useRouter();
 
   // STATE
@@ -26,12 +15,13 @@ type Komitmen = {
   const [step, setStep] = useState(1);
   const [selectedPaket, setSelectedPaket] = useState<any>(null);
   const [selectedKomitmen, setSelectedKomitmen] = useState<any>(null);
-  const [komitmenList, setKomitmenList] = useState<any[]>([]);
   const [paketList, setPaketList] = useState<any[]>([]);
   const [risikoList, setRisikoList] = useState<any[]>([]);
   const [penyebabList, setPenyebabList] = useState<any[]>([]);
   const [pihakList, setPihakList] = useState<any[]>([]);
   const searchParams = useSearchParams();
+  const [komitmenList, setKomitmenList] = useState<any[]>([]);
+const komitmenId = searchParams.get("komitmenId");
 const [pihakForm, setPihakForm] = useState({
   nama: "",
   jenis: "",
@@ -53,7 +43,6 @@ const [step3Form, setStep3Form] = useState({
     jabatanPengelola: "",
     nipPengelola: "",
   });
-  
 const [form, setForm] = useState<any>({
   kegiatan: "",
   tujuan: "",
@@ -75,9 +64,8 @@ const [rtpList, setRtpList] = useState<any[]>([]);
 const [step4Form, setStep4Form] = useState({
   penyebabId: "",
   respon: "",
-  berbagi: "",
-  jenisKorupsi: "",
   jenisRtp: "",
+  berbagi: "",
   uraian: "",
   indikator: "",
   periode: "SEMESTER"
@@ -96,7 +84,16 @@ const [unitList, setUnitList] = useState<any[]>([]);
 const [klasifikasi, setKlasifikasi] = useState("");
 const [openTargetModal, setOpenTargetModal] = useState(false);
 const [selectedRtpId, setSelectedRtpId] = useState(null);
+const pathname = usePathname();
 
+useEffect(() => {
+  if (pathname.includes("spbe")) {
+    setForm((prev:any) => ({
+      ...prev,
+      kategori: "Risiko SPBE"
+    }));
+  }
+}, [pathname]);
 const [targetForm, setTargetForm] = useState({
   waktu: "",
   uraian: ""
@@ -104,47 +101,38 @@ const [targetForm, setTargetForm] = useState({
   // LOAD DATA KOMITMEN
   useEffect(() => {
   const list = JSON.parse(localStorage.getItem("komitmen") || "[]");
-  setKomitmenList(list);
+setKomitmenList(list);
 
-  const komitmenId = searchParams.get("komitmenId");
+  if (!komitmenId) return;
 
-  if (!komitmenId) {
-    alert("Komitmen tidak ditemukan!");
-    router.push("/risiko/korupsi");
-    return;
+  const found = list.find((k:any) => k.id === Number(komitmenId));
+
+  if (found) {
+    setSelectedKomitmen(found.id);
+
+    setHeader({
+      unit: found.unit,
+      pemilik: found.unit,
+      level: found.level,
+      periode: found.periode,
+      namaPemilik: found.pemilik,
+      jabatanPemilik: found.jabatan_pemilik,
+      nipPemilik: found.nip_pemilik,
+      namaPengelola: found.pengelola,
+      jabatanPengelola: found.jabatan_pengelola,
+      nipPengelola: found.nip_pengelola,
+    });
   }
-
-  
-
-  const found = list.find((k: { id: number; }        ) => k.id === Number(komitmenId));
-
-  if (!found) {
-    alert("Data komitmen tidak valid!");
-    router.push("/risiko/korupsi");
-    return;
-  }
-
-  setSelectedKomitmen(found.id);
-
-  setHeader({
-    id: found.id,
-    unit: found.unit,
-    pemilik: found.unit,
-    level: found.level,
-    periode: found.periode,
-    namaPemilik: found.pemilik,
-    jabatanPemilik: found.jabatan_pemilik,
-    nipPemilik: found.nip_pemilik,
-    namaPengelola: found.pengelola,
-    jabatanPengelola: found.jabatan_pengelola,
-    nipPengelola: found.nip_pengelola,
-  });
-}, []);
+}, [komitmenId]);
 useEffect(() => {
   const paket = JSON.parse(localStorage.getItem("paket") || "[]");
   setPaketList(paket);
 }, []);
-
+useEffect(() => {
+  if (komitmenId) {
+    setSelectedKomitmen(Number(komitmenId));
+  }
+}, [komitmenId]);
 useEffect(() => {
   const existing = JSON.parse(localStorage.getItem("paket") || "[]");
 
@@ -206,8 +194,8 @@ const n = matrix[k]?.[d] || 0;
   // SELECT KOMITMEN
   const handleSelect = (e: any) => {
     const found = komitmenList.find(
-      (k) => String(k.id) === e.target.value
-    );
+  (k) => String(k.id) === e.target.value
+);
 
     if (found) {
       setSelectedKomitmen(found.id);
@@ -275,7 +263,6 @@ const saveToStorage = () => {
 
   localStorage.setItem("profil-risiko", JSON.stringify(newData));
 };
-if (!selectedKomitmen) return null;
   return (
     <div className="flex min-h-screen bg-gray-100">
 
@@ -287,10 +274,17 @@ if (!selectedKomitmen) return null;
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
 
           {/* SELECT */}
-          <div className="border p-2 rounded bg-gray-100 text-sm">
-  {header.periode} - {header.unit}
-</div>
-
+          <select
+            onChange={handleSelect}
+            className="border p-2 rounded mb-3"
+          >
+            <option value="">Pilih Komitmen</option>
+            {komitmenList.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.periode} - {k.unit}
+              </option>
+            ))}
+          </select>
 
           {/* HEADER */}
           <div className="bg-white p-4 rounded-xl shadow">
@@ -539,52 +533,43 @@ if (!selectedKomitmen) return null;
     <div>
       <label className="text-sm">Kategori Risiko</label>
       <input
-        value="Risiko Korupsi"
-        disabled
-        className="w-full border p-2 rounded bg-gray-100"
-      />
+  placeholder="Masukkan Kategori Risiko"
+  className="w-full border p-2 rounded"
+  value={form.kategori || ""}
+  onChange={(e)=>
+    setForm((prev: any)=>({...prev, kategori:e.target.value}))
+  }
+/>
     </div>
 
     {/* NAMA KEGIATAN */}
     <div>
       <label className="text-sm">Nama Kegiatan</label>
-      <select
+      <input
+  type="text"
+  placeholder="Masukkan Nama Kegiatan"
   className="w-full border p-2 rounded"
-  onChange={(e) => {
-    const val = e.target.value;
-    const selected = kegiatanList.find(k => k.nama === val);
-
-    setForm((prev:any) => ({
+  value={form.kegiatan}
+  onChange={(e) =>
+    setForm((prev: any) => ({
       ...prev,
-      kegiatan: val,
-      tujuanList: selected?.tujuanList || []
-    }));
-  }}
->
-  <option value="">Pilih Kegiatan</option>
-  {kegiatanList.map((k,i) => (
-    <option key={i} value={k.nama}>{k.nama}</option>
-  ))}
-</select>
+      kegiatan: e.target.value
+    }))
+  }
+/>
     </div>
 
     {/* TUJUAN */}
     <div>
       <label className="text-sm">Tujuan Kegiatan Utama</label>
-      <select
+    <textarea
+  placeholder="Masukkan Tujuan"
   className="w-full border p-2 rounded"
-  onChange={(e) =>
-    setForm((prev:any)=>({
-      ...prev,
-      tujuan: e.target.value
-    }))
+  value={form.tujuan}
+  onChange={(e)=>
+    setForm((prev: any)=>({...prev, tujuan:e.target.value}))
   }
->
-  <option value="">Pilih Tujuan</option>
-  {(form.tujuanList || []).map((t:any,i:number)=>(
-    <option key={i}>{t}</option>
-  ))}
-</select>
+/>
     </div>
 
     {/* PAKET */}
@@ -648,10 +633,6 @@ if (!selectedKomitmen) return null;
       >
         <option>Perencanaan</option>
         <option>Pelaksanaan</option>
-        <option>survey</option>
-        <option>Pelaporan</option>
-        <option>investigasi</option>\
-        <option>operasi</option>
       </select>
     </div>
 
@@ -686,55 +667,8 @@ if (!selectedKomitmen) return null;
         }
       />
     </div>
-    {/* sub kategori risiko*/}
-    <div>
-  <label className="text-sm">Sub Kategori Risiko Korupsi</label>
-  <select
-    className="w-full border p-2 rounded"
-    onChange={(e)=>
-      setForm((prev:any)=>({
-        ...prev,
-        subKategori: e.target.value
-      }))
-    }
-  >
-    <option value="">Pilih</option>
-    {subKategoriList.map((s,i)=>(
-      <option key={i}>{s}</option>
-    ))}
-  </select>
-</div>
-    {/* sub proses bisnis */}
-    <div>
-  <label className="text-sm">Sub Proses Bisnis</label>
-  <textarea
-    className="w-full border p-2 rounded"
-    onChange={(e)=>
-      setForm((prev:any)=>({
-        ...prev,
-        subProses: e.target.value
-      }))
-    }
-  />
-</div>
-    {/* TAMBAH INDIKATOR KECURANGAN */}
-    <div>
-  <label className="text-sm">Indikator Kecurangan</label>
-  <select
-    className="w-full border p-2 rounded"
-    onChange={(e)=>
-      setForm((prev:any)=>({
-        ...prev,
-        indikator: e.target.value
-      }))
-    }
-  >
-    <option value="">Pilih</option>
-    {indikatorList.map((i2,i)=>(
-      <option key={i}>{i2}</option>
-    ))}
-  </select>
-</div>
+   
+    
     {/* PJ */}
     <div>
       <label className="text-sm">Penanggung Jawab</label>
@@ -752,34 +686,17 @@ if (!selectedKomitmen) return null;
     {/* KATEGORI DAMPAK */}
     <div>
       <label className="text-sm">Kategori Dampak</label>
-      <select
+      <input
+  placeholder="Masukkan Kategori Dampak"
   className="w-full border p-2 rounded"
-  value={form.dampakKategori}   // ✅ TAMBAH INI
-  onChange={(e) =>
-    setForm((prev: any) => ({
-      ...prev,
-      dampakKategori: e.target.value,
-    }))
+  value={form.dampakKategori}
+  onChange={(e)=>
+    setForm((prev: any)=>({...prev, dampakKategori:e.target.value}))
   }
->
-        <option>Keuangan Negara</option>
-        <option>Reputasi</option>
-      </select>
+/>
     </div>
 
-    {/* ALAT BUKTI */}
-    <div>
-      <label className="text-sm">Alat Bukti</label>
-      <textarea
-        className="w-full border p-2 rounded"
-        onChange={(e) =>
-          setForm((prev: any) => ({
-            ...prev,
-            alatBukti: e.target.value,
-          }))
-        }
-      />
-    </div>
+   
 
     {/* URAIAN DAMPAK */}
     <div>
@@ -813,14 +730,9 @@ if (!selectedKomitmen) return null;
 
   tujuan: form.tujuan,
   pernyataan: form.pernyataan,
-  kategori: "Risiko Korupsi",
+  kategori: form.kategori,
 
-  // 🔥 TAMBAH INI
-  subProses: form.subProses,
-  subKategori: form.subKategori,
-  indikator: form.indikator,
-  alatBukti: form.alatBukti,
-
+  
   // 🔥 WAJIB BUAT FILTER
   komitmenId: selectedKomitmen,
 
@@ -834,28 +746,7 @@ if (!selectedKomitmen) return null;
   penanggungJawab: form.penanggungJawab,
 };
           setRisikoList((prev) => [...prev, newData]);
-const komitmen = JSON.parse(
-  localStorage.getItem("komitmen") || "[]"
-);
 
-const updatedKomitmen = komitmen.map((k:any) =>
-  k.id === selectedKomitmen
-    ? {
-        ...k,
-        jadwalMR: {
-          ...k.jadwalMR,
-          komunikasi: true,
-          konteks: true,
-          identifikasi: true,
-        }
-      }
-    : k
-);
-
-localStorage.setItem(
-  "komitmen",
-  JSON.stringify(updatedKomitmen)
-);
           setStep(2);
         }}
         className="bg-blue-600 text-white px-4 py-2 rounded"
@@ -894,18 +785,14 @@ localStorage.setItem(
 
     <div>
       <label className="text-sm">Jenis Penyebab</label>
-      <select
-        className="w-full border p-2 rounded"
-        value={step2Form.jenis}
-        onChange={(e)=>
-          setStep2Form(prev=>({...prev, jenis:e.target.value}))
-        }
-      >
-        <option value="">Pilih</option>
-        <option>Tekanan / Pressure</option>
-        <option>Kesempatan / Opportunity</option>
-        <option>Rasionalisasi</option>
-      </select>
+      <input
+  placeholder="Masukkan Jenis Penyebab"
+  className="w-full border p-2 rounded"
+  value={step2Form.jenis}
+  onChange={(e)=>
+    setStep2Form(prev=>({...prev, jenis:e.target.value}))
+  }
+/>
     </div>
 
     <div>
@@ -932,43 +819,43 @@ localStorage.setItem(
 
     <div>
       <label className="text-sm">Status</label>
-      <select
-        className="w-full border p-2 rounded"
-        value={step2Form.status}
-        onChange={(e)=>
-          setStep2Form(prev=>({...prev, status:e.target.value}))
-        }
-      >
-        <option value="">Pilih</option>
-        <option>Memadai</option>
-        <option>Belum Memadai</option>
-      </select>
-    </div>
+      <input
+  placeholder="Masukkan Status"
+  className="w-full border p-2 rounded"
+  value={step2Form.status}
+  onChange={(e)=>
+    setStep2Form(prev=>({...prev, status:e.target.value}))
+  }
+/>    </div>
 
     {/* BUTTON TAMBAH PENYEBAB */}
     <div className="flex justify-end">
       <button
-        onClick={()=>{
-          if(!step2Form.penyebab) return;
+       onClick={()=>{
+  if(!step2Form.penyebab) return;
 
-          const newItem = {
-            id: Date.now(),
-            kode: "S00" + (penyebabList.length + 1),
-            jenis: step2Form.jenis,
-            penyebab: step2Form.penyebab,
-            pengendalian: step2Form.pengendalian,
-            status: step2Form.status,
-          };
+  const newItem = {
+    id: Date.now(),
+    kode: "P-" + Math.floor(Math.random()*1000),
 
-          setPenyebabList(prev=>[...prev, newItem]);
+    jenis: step2Form.jenis,
+    penyebab: step2Form.penyebab,
+    pengendalian: step2Form.pengendalian,
+    status: step2Form.status
+  };
 
-          setStep2Form(prev=>({
-            ...prev,
-            penyebab:"",
-            pengendalian:"",
-            status:""
-          }));
-        }}
+  setPenyebabList(prev=>[...prev, newItem]);
+
+  setStep2Form({
+    jenis: "",
+    penyebab: "",
+    pengendalian: "",
+    status: "",
+    kemungkinan: 1,
+    dampak: 1,
+    skor: 1,
+  });
+}}
         className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2"
       >
         Tambah +
@@ -1017,96 +904,7 @@ localStorage.setItem(
       </tbody>
     </table>
 
-    {/* ========================= */}
-    {/* 🔵 BLOK B: PIHAK TERLIBAT */}
-    {/* ========================= */}
-
-    <div className="mt-5">
-      <label className="text-sm">Pihak Terlibat</label>
-      <textarea
-        value={pihakForm.nama}
-        onChange={(e)=>setPihakForm(prev=>({...prev, nama:e.target.value}))}
-        className="w-full border p-2 rounded"
-      />
-    </div>
-
-    <div>
-      <label className="text-sm">Internal / Eksternal</label>
-      <select
-        value={pihakForm.jenis}
-        onChange={(e)=>setPihakForm(prev=>({...prev, jenis:e.target.value}))}
-        className="w-full border p-2 rounded"
-      >
-        <option value="">Pilih</option>
-        <option value="INTERNAL">INTERNAL</option>
-        <option value="EKSTERNAL">EKSTERNAL</option>
-      </select>
-    </div>
-
-    <div>
-      <label className="text-sm">Jabatan</label>
-      <textarea
-        value={pihakForm.jabatan}
-        onChange={(e)=>setPihakForm(prev=>({...prev, jabatan:e.target.value}))}
-        className="w-full border p-2 rounded"
-      />
-    </div>
-
-    {/* BUTTON TAMBAH PIHAK */}
-    <div className="flex justify-end">
-      <button
-        onClick={()=>{
-          if(!pihakForm.nama || !pihakForm.jenis) return;
-
-          const newItem = {
-            id: Date.now(),
-            kode: "P00" + (pihakList.length + 1),
-            nama: pihakForm.nama,
-            jenis: pihakForm.jenis,
-            jabatan: pihakForm.jabatan
-          };
-
-          setPihakList(prev=>[...prev, newItem]);
-
-          setPihakForm({ nama:"", jenis:"", jabatan:"" });
-        }}
-        className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2"
-      >
-        Tambah +
-      </button>
-    </div>
-
-    {/* TABLE PIHAK */}
-    <table className="w-full text-xs border mt-3">
-      <thead className="bg-purple-800 text-white">
-        <tr>
-          <th className="border p-2">No</th>
-          <th className="border p-2">Nama</th>
-          <th className="border p-2">Internal / Eksternal</th>
-          <th className="border p-2">Jabatan</th>
-          <th className="border p-2">Action</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {pihakList.map((p,i)=>(
-          <tr key={p.id}>
-            <td className="border p-2">{p.kode}</td>
-            <td className="border p-2">{p.nama}</td>
-            <td className="border p-2">{p.jenis}</td>
-            <td className="border p-2">{p.jabatan}</td>
-            <td className="border p-2 text-center">
-              <button
-                onClick={()=>setPihakList(prev=>prev.filter(x=>x.id!==p.id))}
-                className="bg-red-500 text-white px-2 py-1 rounded text-xs"
-              >
-                Hapus
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    
 
     {/* ========================= */}
     {/* 🟢 BLOK C: SKOR */}
@@ -1214,7 +1012,7 @@ localStorage.setItem(
                 ...updated[lastIndex],
                  // STEP 2
   penyebabList,
-  pihakList,
+  
 
   // STEP 4
   rtp: rtpList,
@@ -1241,27 +1039,7 @@ localStorage.setItem(
 
             return updated;
           });
-const komitmen = JSON.parse(
-  localStorage.getItem("komitmen") || "[]"
-);
 
-const updatedKomitmen = komitmen.map((k:any) =>
-  k.id === selectedKomitmen
-    ? {
-        ...k,
-        jadwalMR: {
-          ...k.jadwalMR,
-          analisis: true,
-          evaluasi: true,
-        }
-      }
-    : k
-);
-
-localStorage.setItem(
-  "komitmen",
-  JSON.stringify(updatedKomitmen)
-);
           setStep(3);
         }}
         className="bg-blue-700 text-white px-4 py-2 rounded"
@@ -1280,19 +1058,14 @@ localStorage.setItem(
 
     <div>
       <label className="text-sm">Respon Risiko</label>
-      <select
-        className="w-full border p-2 rounded"
-        value={step3Form.respon}
-        onChange={(e)=>
-          setStep3Form({ respon: e.target.value })
-        }
-      >
-        <option value="">Pilih</option>
-        <option value="Menerima">Menerima</option>
-        <option value="Mengurangi">Mengurangi</option>
-        <option value="Menghindari">Menghindari</option>
-        <option value="Mentransfer">Mentransfer</option>
-      </select>
+      <input
+  placeholder="Masukkan Respon Risiko"
+  className="w-full border p-2 rounded"
+  value={step3Form.respon}
+  onChange={(e)=>
+    setStep3Form({ respon:e.target.value })
+  }
+/>
     </div>
 
     <div className="flex justify-end mt-3">
@@ -1317,26 +1090,7 @@ localStorage.setItem(
 
             return updated;
           });
-const komitmen = JSON.parse(
-  localStorage.getItem("komitmen") || "[]"
-);
 
-const updatedKomitmen = komitmen.map((k:any) =>
-  k.id === selectedKomitmen
-    ? {
-        ...k,
-        jadwalMR: {
-          ...k.jadwalMR,
-          respon: true,
-        }
-      }
-    : k
-);
-
-localStorage.setItem(
-  "komitmen",
-  JSON.stringify(updatedKomitmen)
-);
           setStep(4);
         }}
         className="bg-blue-600 text-white px-4 py-2 rounded"
@@ -1357,36 +1111,27 @@ localStorage.setItem(
     {/* PILIH PENYEBAB */}
     <div>
       <label className="text-sm">Pilih Penyebab Risiko</label>
-      <select
-        className="w-full border p-2 rounded"
-        value={step4Form.penyebabId}
-        onChange={(e)=>
-          setStep4Form(prev=>({...prev, penyebabId:e.target.value}))
-        }
-      >
-        <option value="">Pilih</option>
-        {penyebabList.map(p=>(
-          <option key={p.id} value={p.id}>
-            {p.kode} - {p.penyebab}
-          </option>
-        ))}
-      </select>
+      <input
+  placeholder="Masukkan Penyebab Risiko"
+  className="w-full border p-2 rounded"
+  value={step4Form.penyebabId}
+  onChange={(e)=>
+    setStep4Form(prev=>({...prev, penyebabId:e.target.value}))
+  }
+/>
     </div>
 
     {/* RESPON */}
     <div>
       <label className="text-sm">Respon Risiko</label>
-      <select
-        className="w-full border p-2 rounded"
-        value={step4Form.respon}
-        onChange={(e)=>
-          setStep4Form(prev=>({...prev, respon:e.target.value}))
-        }
-      >
-        <option value="">Pilih</option>
-        <option>Mengurangi Dampak</option>
-        <option>Mengurangi Frekuensi</option>
-      </select>
+      <input
+  placeholder="Masukkan Respon"
+  className="w-full border p-2 rounded"
+  value={step4Form.respon}
+  onChange={(e)=>
+    setStep4Form(prev=>({...prev, respon:e.target.value}))
+  }
+/>
     </div>
 
     {/* BERBAGI */}
@@ -1401,18 +1146,7 @@ localStorage.setItem(
       />
     </div>
 
-    {/* JENIS KORUPSI */}
-    <div>
-      <label className="text-sm">Jenis RTP Korupsi</label>
-      <input
-        className="w-full border p-2 rounded"
-        value={step4Form.jenisKorupsi}
-        onChange={(e)=>
-          setStep4Form(prev=>({...prev, jenisKorupsi:e.target.value}))
-        }
-      />
-    </div>
-
+    
     {/* JENIS RTP */}
     <div>
       <label className="text-sm">Jenis RTP</label>
@@ -1452,16 +1186,14 @@ localStorage.setItem(
     {/* PERIODE */}
     <div>
       <label className="text-sm">Periode</label>
-      <select
-        className="w-full border p-2 rounded"
-        value={step4Form.periode}
-        onChange={(e)=>
-          setStep4Form(prev=>({...prev, periode:e.target.value}))
-        }
-      >
-        <option>SEMESTER</option>
-        <option>TAHUNAN</option>
-      </select>
+      <input
+  placeholder="Masukkan Periode"
+  className="w-full border p-2 rounded"
+  value={step4Form.periode}
+  onChange={(e)=>
+    setStep4Form(prev=>({...prev, periode:e.target.value}))
+  }
+/>
     </div>
 
     {/* BUTTON TAMBAH */}
@@ -1490,7 +1222,6 @@ localStorage.setItem(
             penyebabId: "",
             respon: "",
             berbagi: "",
-            jenisKorupsi: "",
             jenisRtp: "",
             uraian: "",
             indikator: "",
@@ -1837,51 +1568,15 @@ localStorage.setItem(
 
       // 🔥 SIMPAN KE localStorage
       const existing = JSON.parse(localStorage.getItem("profil-risiko") || "[]");
-const komitmen = JSON.parse(
-  localStorage.getItem("komitmen") || "[]"
-);
 
-const updatedKomitmen = komitmen.map((k:any) =>
-  k.id === selectedKomitmen
-    ? {
-        ...k,
-        jadwalMR: {
-          ...k.jadwalMR,
-          pemantauan: true,
-          laporan: true
-        }
-      }
-    : k
-);
+// 🔥 ANTI DOUBLE BERDASARKAN ID
+const exists = existing.find((x:any) => x.id === newData.id);
 
-localStorage.setItem(
-  "komitmen",
-  JSON.stringify(updatedKomitmen)
-);
-      localStorage.setItem(
-        "profil-risiko",
-        JSON.stringify([...existing, newData])
-      );
-      const komitmen2 = JSON.parse(
-  localStorage.getItem("komitmen") || "[]"
-);
+const updatedStorage = exists
+  ? existing.map((x:any)=> x.id === newData.id ? newData : x)
+  : [...existing, newData];
 
-const updatedKomitmen2 = komitmen2.map((k:any) =>
-  k.id === selectedKomitmen
-    ? {
-        ...k,
-        jadwalMR: {
-          ...k.jadwalMR,
-          rtp: true,
-        }
-      }
-    : k
-);
-
-localStorage.setItem(
-  "komitmen",
-  JSON.stringify(updatedKomitmen2)
-);
+localStorage.setItem("profil-risiko", JSON.stringify(updatedStorage));
     }
 
     return updated;
@@ -1895,8 +1590,7 @@ localStorage.setItem(
     Simpan
   </button>
 </div>
-   
-);
+    
 
     </div>
 
