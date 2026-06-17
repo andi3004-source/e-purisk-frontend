@@ -3,7 +3,7 @@
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import ModalLED from "@/components/ModalLED";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // 🔥 LIB EXCEL (LAMA - BIAR GAK RUSAK)
 import * as XLSX from "xlsx";
@@ -30,6 +30,34 @@ export default function LossPage() {
   const [openModal, setOpenModal] = useState(false);
   const [data, setData] = useState<LossData[]>([]);
 
+const [komitmenList, setKomitmenList] = useState<any[]>([]);
+const [selectedId, setSelectedId] = useState<number | null>(null);
+
+useEffect(() => {
+  const komitmen = JSON.parse(
+    localStorage.getItem("komitmen") || "[]"
+  );
+
+  setKomitmenList(komitmen);
+
+  if (komitmen.length > 0) {
+    setSelectedId(komitmen[0].id);
+  }
+}, []);
+
+useEffect(() => {
+  if (!selectedId) return;
+
+  const allLED = JSON.parse(
+    localStorage.getItem("loss-event") || "[]"
+  );
+
+  const filtered = allLED.filter(
+    (item: any) => item.komitmenId === selectedId
+  );
+
+  setData(filtered);
+}, [selectedId]);
   // 🔥 TAMBAHAN SORT + SEARCH
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<keyof LossData | null>(null);
@@ -132,7 +160,25 @@ export default function LossPage() {
 
       <div className="flex-1">
         <Navbar />
+      <div className="mb-4">
+  <label className="font-semibold">
+    Pilih Komitmen
+  </label>
 
+  <select
+    value={selectedId || ""}
+    onChange={(e) =>
+      setSelectedId(Number(e.target.value))
+    }
+    className="w-full border rounded p-2 mt-2"
+  >
+    {komitmenList.map((k) => (
+      <option key={k.id} value={k.id}>
+        {k.periode} - {k.unit}
+      </option>
+    ))}
+  </select>
+</div>
         <div className="p-6 text-gray-900">
           <div className="bg-white rounded-xl shadow p-4 text-gray-900">
 
@@ -175,58 +221,71 @@ export default function LossPage() {
             </div>
 
             {/* TABLE */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-gray-900">
-                <thead className="bg-purple-800 text-white">
-                  <tr>
-                    <th className="p-2">No</th>
-                    <th onClick={() => handleSort("sumber")} className="p-2 cursor-pointer">Sumber</th>
-                    <th onClick={() => handleSort("tanggalCatat")} className="p-2 cursor-pointer">Tanggal Catat</th>
-                    <th className="p-2">Uraian</th>
-                    <th className="p-2">Waktu</th>
-                    <th className="p-2">Lokasi</th>
-                    <th className="p-2">Sebab</th>
-                    <th className="p-2">Kondisi</th>
-                    <th className="p-2">Dampak</th>
-                    <th className="p-2">Rincian</th>
-                    <th className="p-2">Unit</th>
-                  </tr>
-                </thead>
+<div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+  <table className="min-w-[1200px] w-full border-collapse text-sm text-gray-900">
+    <thead className="sticky top-0 z-10 bg-purple-800 text-white">
+      <tr>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">No</th>
+        <th
+          onClick={() => handleSort("sumber")}
+          className="px-4 py-3 text-left font-semibold whitespace-nowrap cursor-pointer hover:bg-purple-700"
+        >
+          Sumber
+        </th>
+        <th
+          onClick={() => handleSort("tanggalCatat")}
+          className="px-4 py-3 text-left font-semibold whitespace-nowrap cursor-pointer hover:bg-purple-700"
+        >
+          Tanggal Catat
+        </th>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Uraian</th>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Waktu</th>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Lokasi</th>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Sebab</th>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Kondisi</th>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Dampak</th>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Rincian</th>
+        <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Unit</th>
+      </tr>
+    </thead>
 
-                <tbody>
-                  {processedData.length === 0 ? (
-                    <tr>
-                      <td colSpan={11} className="text-center p-4 text-gray-600">
-                        No data available
-                      </td>
-                    </tr>
-                  ) : (
-                    processedData.map((item, i) => (
-                      <tr key={item.id} className="border-b hover:bg-gray-100 text-gray-900">
-                        <td className="p-2">{i + 1}</td>
-                        <td className="p-2">{item.sumber}</td>
-                        <td className="p-2">{item.tanggalCatat}</td>
-                        <td className="p-2">{item.uraian}</td>
-                        <td className="p-2">{item.waktu}</td>
-                        <td className="p-2">{item.lokasi}</td>
-                        <td className="p-2">{item.sebab}</td>
-                        <td className="p-2">{item.kondisi}</td>
-                        <td className="p-2">{item.dampak}</td>
-                        <td className="p-2">{item.rincian}</td>
-                        <td className="p-2">{item.unit}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
+    <tbody className="bg-white">
+      {processedData.length === 0 ? (
+        <tr>
+          <td colSpan={11} className="px-4 py-6 text-center text-gray-500">
+            No data available
+          </td>
+        </tr>
+      ) : (
+        processedData.map((item, i) => (
+          <tr
+            key={item.id}
+            className="border-t border-gray-200 hover:bg-gray-50 transition"
+          >
+            <td className="px-4 py-3 whitespace-nowrap">{i + 1}</td>
+            <td className="px-4 py-3 whitespace-nowrap">{item.sumber}</td>
+            <td className="px-4 py-3 whitespace-nowrap">{item.tanggalCatat}</td>
+            <td className="px-4 py-3">{item.uraian}</td>
+            <td className="px-4 py-3 whitespace-nowrap">{item.waktu}</td>
+            <td className="px-4 py-3">{item.lokasi}</td>
+            <td className="px-4 py-3">{item.sebab}</td>
+            <td className="px-4 py-3">{item.kondisi}</td>
+            <td className="px-4 py-3">{item.dampak}</td>
+            <td className="px-4 py-3">{item.rincian}</td>
+            <td className="px-4 py-3 whitespace-nowrap">{item.unit}</td>
+          </tr>
+        ))
+      )}
+    </tbody>
+  </table>
+</div>
             {/* FOOTER */}
-            <div className="flex justify-between mt-3 text-sm text-gray-700">
-              <span>
-                Showing 1 to {processedData.length} of {processedData.length} entries
-              </span>
-            </div>
+            {/* FOOTER */}
+<div className="bg-white rounded-xl shadow p-5 text-gray-900">
+  <span>
+    Showing 1 to {processedData.length} of {processedData.length} entries
+  </span>
+</div>
 
           </div>
         </div>
@@ -239,4 +298,8 @@ export default function LossPage() {
       />
     </div>
   );
+}
+
+function setData(arg0: any) {
+  throw new Error("Function not implemented.");
 }

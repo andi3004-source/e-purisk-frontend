@@ -1,13 +1,51 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
 
 export default function DashboardPage() {
+  const [dokumen, setDokumen] = useState<any[]>([]);
+
+  useEffect(() => {
+    const data = JSON.parse(
+      localStorage.getItem("dokumen-dashboard") || "[]"
+    );
+
+    setDokumen(data);
+  }, []);
+
+  const handleUpload = (e: any) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const newDoc = {
+  id: Date.now(),
+  nama: file.name,
+  tanggal: new Date().toLocaleDateString(),
+  status: "Published",
+  url: String(reader.result),
+};
+
+      const all = [...dokumen, newDoc];
+
+      setDokumen(all);
+
+      localStorage.setItem(
+        "dokumen-dashboard",
+        JSON.stringify(all)
+      );
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-
       {/* SIDEBAR */}
       <Sidebar />
 
@@ -147,7 +185,68 @@ export default function DashboardPage() {
                 </table>
 
               </div>
+              <div className="bg-white p-4 rounded-xl shadow mt-6">
 
+  <h2 className="font-bold mb-4">
+    Upload Dokumen PDF
+  </h2>
+
+  <input
+    type="file"
+    accept=".pdf"
+    onChange={handleUpload}
+    className="border p-2 rounded"
+  />
+
+</div>
+      <div className="bg-white p-4 rounded-xl shadow mt-6">
+
+  <h2 className="font-bold mb-4">
+    Dokumen Terpublikasi
+  </h2>
+
+  <table className="w-full border">
+
+    <thead className="bg-blue-900 text-white">
+      <tr>
+        <th className="p-2">Nama File</th>
+        <th className="p-2">Tanggal</th>
+        <th className="p-2">Status</th>
+        <th className="p-2">Aksi</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {dokumen.map((item) => (
+        <tr key={item.id}>
+          <td className="border p-2">
+            {item.nama}
+          </td>
+
+          <td className="border p-2">
+            {item.tanggal}
+          </td>
+
+          <td className="border p-2">
+            {item.status}
+          </td>
+
+          <td className="border p-2">
+            <a
+              href={item.url}
+              target="_blank"
+              className="bg-blue-600 text-white px-3 py-1 rounded"
+            >
+              Lihat
+            </a>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+
+  </table>
+
+</div>
             </div>
 
           </div>

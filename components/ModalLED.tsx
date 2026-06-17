@@ -48,7 +48,12 @@ export default function ModalLED({ isOpen, onClose, onSave }: any) {
 
           <div>
             <label className="font-medium">Tanggal Pencatatan (2)</label>
-            <input type="date" name="tanggal" onChange={handleChange} className="w-full border rounded p-2" />
+            <input
+                 type="date"
+                  name="tanggalCatat"
+                   onChange={handleChange}
+                  className="w-full border rounded p-2"
+            />
           </div>
 
           <div>
@@ -83,7 +88,7 @@ export default function ModalLED({ isOpen, onClose, onSave }: any) {
 
           <div>
             <label className="font-medium">Rincian Penanganan (10)</label>
-            <textarea name="penanganan" onChange={handleChange} className="w-full border rounded p-2" />
+            <textarea name="rincian" onChange={handleChange} className="w-full border rounded p-2" />
           </div>
 
           <div className="col-span-3">

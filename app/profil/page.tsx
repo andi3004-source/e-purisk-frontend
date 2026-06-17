@@ -8,20 +8,47 @@ import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useEf
 
 
 
+type LossData = any;
+
 export default function ProfilPage() {
-  const [komitmenList, setKomitmenList] = useState<any[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [risiko, setRisiko] = useState<any[]>([]);
-  const [sasaranList, setSasaranList] = useState<any[]>([]);
-  const komitmen = komitmenList.find((k) => k.id === selectedId);
-  console.log("KOMITMEN", komitmen);
+const [komitmenList, setKomitmenList] = useState<any[]>([]);
+const [selectedId, setSelectedId] = useState<number | null>(null);
+const [risiko, setRisiko] = useState<any[]>([]);
+const [sasaranList, setSasaranList] = useState<any[]>([]);
+const komitmen = komitmenList.find((k) => k.id === selectedId);
+console.log("KOMITMEN", komitmen);
 console.log("JADWAL", komitmen?.jadwalMR);
 const [pakta, setPakta] = useState("");
 const [tujuan, setTujuan] = useState("");
 const [internal, setInternal] = useState<any[]>([]);
 const [eksternal, setEksternal] = useState<any[]>([]);
 const [profilRisiko, setProfilRisiko] = useState<any[]>([]);
+  const [ledData, setLedData] = useState<any[]>([]);
+  const [data, setData] = useState<LossData[]>([]);
+const handleAddData = (newData: Omit<LossData, "id">) => {
 
+  const updated = [
+    ...data,
+    {
+      id: data.length + 1,
+      ...newData,
+    },
+  ];
+
+  setData(updated);
+
+  localStorage.setItem(
+    "loss-event",
+    JSON.stringify(updated)
+  );
+};
+useEffect(() => {
+  const saved = JSON.parse(
+    localStorage.getItem("loss-event") || "[]"
+  );
+
+  setData(saved);
+}, []);
 const downloadPDF = () => {
   const content = document.getElementById("pdf-area");
 
@@ -335,17 +362,31 @@ profilRisiko.forEach((item: any, index: number) => {
   const sasaranData = JSON.parse(
     localStorage.getItem("sasaran-" + selectedId) || "[]"
   );
+  
+  const profilData = profilRisiko;
 
-  const profilData = JSON.parse(
-    localStorage.getItem("profil-risiko") || "[]"
-  ).filter(
-    (r:any) => r.komitmenId === selectedId
-  );
+  const dataBaru = {
+  ...komitmen,
+  pakta: paktaData,
+  tujuan: tujuanData,
+  internal: internalData,
+  eksternal: eksternalData,
+  sasaranList: sasaranData,
+  profilRisiko: profilData,
+  status: "Pending",
+};
+
+console.log("DATA BARU", dataBaru);
 
   const dataVerifikator = JSON.parse(
     localStorage.getItem("verifikator-data") || "[]"
   );
-
+console.log("PAKTA", paktaData);
+console.log("TUJUAN", tujuanData);
+console.log("INTERNAL", internalData);
+console.log("EKSTERNAL", eksternalData);
+console.log("SASARAN", sasaranData);
+console.log("PROFIL", profilData);
   dataVerifikator.push({
     ...komitmen,
 
@@ -363,7 +404,14 @@ profilRisiko.forEach((item: any, index: number) => {
     status: "Pending",
     tanggalKirim: new Date().toISOString()
   });
-
+console.log("DATA DIKIRIM KE VERIFIKATOR", {
+  pakta: paktaData,
+  tujuan: tujuanData,
+  internal: internalData,
+  eksternal: eksternalData,
+  sasaranList: sasaranData,
+  profilRisiko: profilData,
+});
   localStorage.setItem(
     "verifikator-data",
     JSON.stringify(dataVerifikator)
@@ -657,10 +705,63 @@ const renderCell = (k: number, d: number) => {
   </div>
 )}
 
+  {/* 5 LOSS EVENT DATABASE */}
+<div>
+  <h2 className="font-bold mb-2">
+    5. Loss Event Database (LED)
+  </h2>
+
+  <div className="overflow-x-auto">
+    <table className="w-full border text-xs">
+      <thead className="bg-purple-800 text-white">
+        <tr>
+          <th className="border p-2">No</th>
+          <th className="border p-2">Sumber</th>
+          <th className="border p-2">Tanggal Catat</th>
+          <th className="border p-2">Uraian</th>
+          <th className="border p-2">Waktu</th>
+          <th className="border p-2">Lokasi</th>
+          <th className="border p-2">Sebab</th>
+          <th className="border p-2">Kondisi</th>
+          <th className="border p-2">Dampak</th>
+          <th className="border p-2">Rincian</th>
+          <th className="border p-2">Unit</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {ledData.length === 0 ? (
+          <tr>
+            <td colSpan={11} className="text-center p-4">
+              Belum ada data LED
+            </td>
+          </tr>
+        ) : (
+          ledData.map((item:any,index:number)=>(
+            <tr key={index}>
+              <td className="border p-2">{index+1}</td>
+              <td className="border p-2">{item.sumber}</td>
+              <td className="border p-2">{item.tanggalCatat}</td>
+              <td className="border p-2">{item.uraian}</td>
+              <td className="border p-2">{item.waktu}</td>
+              <td className="border p-2">{item.lokasi}</td>
+              <td className="border p-2">{item.sebab}</td>
+              <td className="border p-2">{item.kondisi}</td>
+              <td className="border p-2">{item.dampak}</td>
+              <td className="border p-2">{item.rincian}</td>
+              <td className="border p-2">{item.unit}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
+
         {/* 5 RISIKO */}
 <div>
   <h2 className="font-bold mb-2">
-    5. Profil Risiko
+    6. Profil Risiko
   </h2>
 
   {/* VALIDASI */}
@@ -811,7 +912,7 @@ const renderCell = (k: number, d: number) => {
 {/* 6 PROFIL RISIKO KORUPSI */}
 <div className="mt-6">
   <h2 className="font-bold mb-2">
-    6. Profil Risiko Korupsi
+    7. Profil Risiko Korupsi
   </h2>
 
   <div className="overflow-x-auto">
