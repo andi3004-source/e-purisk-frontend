@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import React from "react";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
-export default function TambahProfilRisikoPage() {
+export default  function TambahProfilRisikoPage() {
   type Komitmen = {
     id: number;
     unit: string;
@@ -32,6 +32,33 @@ export default function TambahProfilRisikoPage() {
   const [risikoList, setRisikoList] = useState<any[]>([]);
   const [penyebabList, setPenyebabList] = useState<any[]>([]);
   const [pihakList, setPihakList] = useState<any[]>([]);
+  const [referensiList, setReferensiList] = useState<any[]>([]);
+  const [pernyataanList, setPernyataanList] = useState<any[]>([]);
+   const [dampakList, setDampakList] = useState<any[]>([]);
+   useEffect(() => {
+  const fetchReferensi = async () => {
+    try {
+      const res = await axios.get(
+        "http://127.0.0.1:8000/api/referensi-risiko?kategori=Risiko Korupsi"
+      );
+
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data.data || [];
+
+      console.log("REFERENSI", data);
+
+      setReferensiList(data);
+      setPernyataanList(data);
+      setDampakList(data);
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchReferensi();
+}, []);
   const searchParams = useSearchParams();
   const [pihakForm, setPihakForm] = useState({
     nama: "",
@@ -54,7 +81,13 @@ export default function TambahProfilRisikoPage() {
     jabatanPengelola: "",
     nipPengelola: "",
   });
-
+const getRiskColor = (nilai:number) => {
+  if (nilai <= 6) return "bg-green-600 text-white";
+  if (nilai <= 10) return "bg-lime-300 text-black";
+  if (nilai <= 15) return "bg-yellow-400 text-black";
+  if (nilai <= 19) return "bg-orange-400 text-black";
+  return "bg-red-600 text-white";
+};
   const [form, setForm] = useState<any>({
     kegiatan: "",
     tujuan: "",
@@ -67,6 +100,7 @@ export default function TambahProfilRisikoPage() {
     led: "",
     pernyataan: "",
     penanggungJawab: "",
+
     dampakKategori: "",
     alatBukti: "",
     dampak: "",
@@ -84,19 +118,39 @@ export default function TambahProfilRisikoPage() {
     periode: "SEMESTER",
   });
   const [rtpScore, setRtpScore] = useState({
-    k: 1,
-    d: 1,
-    n: 1,
-    sumber: "",
-    ketK: "",
-    ketD: "",
-  });
+  k: 1,
+  d: 1,
+  n: 1,
+  sumber: [] as string[],
+  ketK: "",
+  ketD: "",
+});
 
   const [unitForm, setUnitForm] = useState("");
   const [unitList, setUnitList] = useState<any[]>([]);
   const [klasifikasi, setKlasifikasi] = useState("");
   const [openTargetModal, setOpenTargetModal] = useState(false);
   const [selectedRtpId, setSelectedRtpId] = useState(null);
+  const [tahapanList, setTahapanList] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchTahapan = async () => {
+      try {
+        const res = await axios.get(
+          "http://127.0.0.1:8000/api/tahapan"
+        );
+
+        const data = Array.isArray(res.data)
+          ? res.data
+          : res.data.data || [];
+
+        setTahapanList(data);
+      } catch (error) {
+        console.error("Gagal ambil tahapan", error);
+      }
+    };
+
+    fetchTahapan();
+  }, []);
 
   const [targetForm, setTargetForm] = useState({
     waktu: "",
@@ -153,6 +207,28 @@ export default function TambahProfilRisikoPage() {
     fetchKomitmen();
   }, [searchParams, router]);
 
+  useEffect(() => {
+    const fetchPaket = async () => {
+      try {
+        const res = await axios.get("http://127.0.0.1:8000/api/paket");
+
+
+        const data = Array.isArray(res.data)
+          ? res.data
+          : res.data.data || [];
+
+        setPaketList(data);
+      } catch (error) {
+        console.error("Gagal ambil paket:", error);
+      }
+
+
+    };
+
+    fetchPaket();
+  }, []);
+
+
   const [step2Form, setStep2Form] = useState({
     jenis: "",
     penyebab: "",
@@ -170,7 +246,7 @@ export default function TambahProfilRisikoPage() {
       [6, 12, 16, 19, 24],
       [11, 15, 18, 23, 25],
     ];
-
+console.log("RTP SCORE", rtpScore);
     // index -1 karena array mulai dari 0
     const k = Number(step2Form.kemungkinan) - 1;
     const d = Number(step2Form.dampak) - 1;
@@ -244,13 +320,97 @@ export default function TambahProfilRisikoPage() {
       return { ...prev, n };
     });
   }, [rtpScore.k, rtpScore.d]);
-  const saveToStorage = () => {
-    const existing = JSON.parse(localStorage.getItem("profil-risiko") || "[]");
 
-    const newData = [...existing, ...risikoList];
+  const simpanLangsungDatabase = async () => {
+    try {
+      const lastRisk = risikoList[risikoList.length - 1];
 
-    localStorage.setItem("profil-risiko", JSON.stringify(newData));
+      if (!lastRisk) {
+        alert("Data risiko belum ada");
+        return;
+      }
+
+      const payload = {
+        komitmen_id: selectedKomitmen,
+        paket_id: selectedPaket?.id || null,
+
+        kode: lastRisk.kode,
+        kategori: "Risiko Korupsi",
+        kegiatan: lastRisk.kegiatan || form.kegiatan || "-",
+        tujuan: lastRisk.tujuan || form.tujuan || "-",
+        tahapan: lastRisk.tahapan || form.tahapan || "-",
+        pernyataan: lastRisk.pernyataan || "-",
+
+        dampak: lastRisk.dampak || form.dampak || "-",
+        dampak_kategori: lastRisk.dampakKategori || form.dampakKategori || "-",
+
+        penanggung_jawab:
+          lastRisk.penanggungJawab || form.penanggungJawab || "-",
+
+        k: lastRisk.k || step2Form.kemungkinan,
+        d: lastRisk.d || step2Form.dampak,
+        skor: lastRisk.skor || step2Form.skor,
+        prioritas: lastRisk.prioritas || "-",
+        respon: lastRisk.respon || step3Form.respon || "-",
+
+        rtp_k: rtpScore.k,
+        rtp_d: rtpScore.d,
+        rtp_n: rtpScore.n,
+        sumber: rtpScore.sumber || "-",
+        klasifikasi: klasifikasi || "-",
+
+        sub_proses: lastRisk.subProses || form.subProses || "-",
+        sub_kategori: lastRisk.subKategori || form.subKategori || "-",
+        alat_bukti: lastRisk.alatBukti || form.alatBukti || "-",
+
+        penyebab: JSON.stringify(penyebabList),
+        pihak: JSON.stringify(pihakList),
+        rtp: JSON.stringify(rtpList),
+        unit_tembusan: JSON.stringify(unitList.map((u) => u.nama)),
+      };
+
+      const res = await axios.post(
+        "http://127.0.0.1:8000/api/profil-risiko",
+        payload
+      );
+
+      setRisikoList((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          ...lastRisk,
+          id: res.data?.data?.id || lastRisk.id,
+          penyebabList,
+          pihakList,
+          rtp: rtpList,
+        };
+        return updated;
+      });
+
+      alert("Profil risiko berhasil disimpan ke database");
+
+      setOpenModal(false);
+      setStep(1);
+
+      setPenyebabList([]);
+      setPihakList([]);
+      setRtpList([]);
+      setUnitList([]);
+      setKlasifikasi("");
+
+      router.refresh();
+    } catch (error: any) {
+      console.error("Gagal simpan profil risiko:", error);
+
+      alert(
+        JSON.stringify(
+          error.response?.data || error.message,
+          null,
+          2
+        )
+      );
+    }
   };
+
   if (!selectedKomitmen) return null;
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -464,7 +624,13 @@ export default function TambahProfilRisikoPage() {
 
                         <td className="border p-2">{r.k || "-"}</td>
                         <td className="border p-2">{r.d || "-"}</td>
-                        <td className="border p-2">{r.skor || "-"}</td>
+                        <td
+  className={`border p-2 text-center font-bold ${
+    getRiskColor(Number(r.skor))
+  }`}
+>
+  {r.skor || "-"}
+</td>
 
                         <td className="border p-2">{r.prioritas || "-"}</td>
 
@@ -485,7 +651,13 @@ export default function TambahProfilRisikoPage() {
                         {/* 🔥 NILAI RTP */}
                         <td className="border p-2">{r.rtp_k || "-"}</td>
                         <td className="border p-2">{r.rtp_d || "-"}</td>
-                        <td className="border p-2">{r.rtp_n || "-"}</td>
+                       <td
+  className={`border p-2 text-center font-bold ${
+    getRiskColor(Number(r.rtp_n))
+  }`}
+>
+  {r.rtp_n || "-"}
+</td>
 
                         {/* 🔥 PENANGGUNG JAWAB (DARI STEP 1) */}
                         <td className="border p-2">
@@ -555,26 +727,51 @@ export default function TambahProfilRisikoPage() {
                   <div className="p-4 space-y-4">
                     {step === 1 && (
                       <>
-                        <div className="bg-blue-50 p-3 text-xs border rounded">
+                        <div className="
+  bg-white
+  w-[1100px]
+  rounded-xl
+  max-h-[90vh]
+  overflow-y-auto
+  opacity-100
+  text-gray-900
+">
                           Step 1: Isi data kegiatan, kategori risiko, dan
                           pernyataan risiko
                         </div>
 
                         {/* KATEGORI (AUTO) */}
                         <div>
-                          <label className="text-sm">Kategori Risiko</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Kategori Risiko</label>
                           <input
                             value="Risiko Korupsi"
                             disabled
-                            className="w-full border p-2 rounded bg-gray-100"
+                            className="
+    bg-white
+  w-[1100px]
+  rounded-xl
+  max-h-[90vh]
+  overflow-y-auto
+  opacity-100
+  text-gray-900
+"
                           />
                         </div>
 
                         {/* NAMA KEGIATAN */}
                         <div>
-                          <label className="text-sm">Nama Kegiatan</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Nama Kegiatan</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="
+  bg-white
+  w-[1100px]
+  rounded-xl
+  max-h-[90vh]
+  overflow-y-auto
+  opacity-100
+  text-gray-900
+  font-bold
+"
                             onChange={(e) => {
                               const val = e.target.value;
                               const selected = kegiatanList.find(
@@ -599,11 +796,17 @@ export default function TambahProfilRisikoPage() {
 
                         {/* TUJUAN */}
                         <div>
-                          <label className="text-sm">
+                          <label className="text-sm font-semibold text-gray-800 font-bold">
                             Tujuan Kegiatan Utama
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className=" bg-white
+  w-[1100px]
+  rounded-xl
+  max-h-[90vh]
+  overflow-y-auto
+  opacity-100
+  text-gray-900 font-bold"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -622,10 +825,16 @@ export default function TambahProfilRisikoPage() {
 
                         {/* PAKET */}
                         <div>
-                          <label className="text-sm">Nama Paket</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Nama Paket</label>
 
                           <select
-                            className="w-full border p-2 rounded"
+                            className=" bg-white
+  w-[1100px]
+  rounded-xl
+  max-h-[90vh]
+  overflow-y-auto
+  opacity-100
+  text-gray-900"
                             onChange={(e) => {
                               const value = e.target.value;
                               <p className="text-xs text-red-500">
@@ -658,7 +867,7 @@ export default function TambahProfilRisikoPage() {
 
                           {/* AUTO ISI */}
                           {selectedPaket && (
-                            <div className="border rounded p-3 bg-gray-50 text-sm space-y-1 mt-2">
+                            <div className="border rounded p-3 bg-gray-50 text-sm space-y-1 mt-2 font-bold">
                               <div>
                                 <b>Kode Paket:</b> {selectedPaket.kode}
                               </div>
@@ -677,9 +886,10 @@ export default function TambahProfilRisikoPage() {
 
                         {/* TAHAPAN */}
                         <div>
-                          <label className="text-sm">Tahapan Pekerjaan</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Tahapan Pekerjaan</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold "
+                            value={form.tahapan}
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -687,22 +897,26 @@ export default function TambahProfilRisikoPage() {
                               }))
                             }
                           >
-                            <option>Perencanaan</option>
-                            <option>Pelaksanaan</option>
-                            <option>survey</option>
-                            <option>Pelaporan</option>
-                            <option>investigasi</option>
-                            <option>operasi</option>
+                            <option value="">Pilih Tahapan</option>
+
+                            {tahapanList.map((item: any) => (
+                              <option
+                                key={item.id}
+                                value={item.tahapan}
+                              >
+                                {item.tahapan}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
                         {/* LED */}
                         <div>
-                          <label className="text-sm">
+                          <label className="text-sm font-semibold text-gray-800 font-bold">
                             Referensi Lost Event
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -719,23 +933,56 @@ export default function TambahProfilRisikoPage() {
                         {/* PERNYATAAN */}
                         <div>
                           <label className="text-sm">Pernyataan Risiko</label>
-                          <textarea
-                            className="w-full border p-2 rounded"
-                            onChange={(e) =>
+
+                          <select
+                            className="w-full border p-2 rounded bg-white text-black"
+                            value={form.pernyataan}
+                            onChange={(e) => {
+                              const selected = referensiList.find(
+                                (item: any) =>
+                                  item.pernyataan === e.target.value,
+                              );
+
                               setForm((prev: any) => ({
                                 ...prev,
-                                pernyataan: e.target.value,
-                              }))
-                            }
-                          />
+                                pernyataan: selected?.pernyataan || "",
+                                dampak: selected?.dampak || prev.dampak,
+                                dampakKategori:
+                                  selected?.dampak_kategori ||
+                                  selected?.kategori_dampak ||
+                                  prev.dampakKategori,
+                              }));
+
+                              setStep2Form((prev: any) => ({
+                                ...prev,
+                                jenis:
+                                  selected?.jenis ||
+                                  selected?.jenis_penyebab ||
+                                  prev.jenis,
+                                penyebab: selected?.penyebab || prev.penyebab,
+                                pengendalian:
+                                  selected?.pengendalian || prev.pengendalian,
+                                status: selected?.status || prev.status,
+                              }));
+                            }}
+                          >
+                            <option value="">Pilih Pernyataan Risiko</option>
+
+                            {pernyataanList.map((item: any) => (
+                              <option key={item.id} value={item.pernyataan}>
+                                {item.kode ? `${item.kode} | ` : ""}
+                                {item.pernyataan}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                         {/* sub kategori risiko*/}
                         <div>
-                          <label className="text-sm">
+                          <label className="text-sm font-semibold text-gray-800 font-bold">
                             Sub Kategori Risiko Korupsi
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -751,9 +998,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* sub proses bisnis */}
                         <div>
-                          <label className="text-sm">Sub Proses Bisnis</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Sub Proses Bisnis</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -764,11 +1011,11 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* TAMBAH INDIKATOR KECURANGAN */}
                         <div>
-                          <label className="text-sm">
+                          <label className="text-sm font-semibold text-gray-800 font-bold">
                             Indikator Kecurangan
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -784,9 +1031,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* PJ */}
                         <div>
-                          <label className="text-sm">Penanggung Jawab</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Penanggung Jawab</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -798,9 +1045,9 @@ export default function TambahProfilRisikoPage() {
 
                         {/* KATEGORI DAMPAK */}
                         <div>
-                          <label className="text-sm">Kategori Dampak</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Kategori Dampak</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             value={form.dampakKategori} // ✅ TAMBAH INI
                             onChange={(e) =>
                               setForm((prev: any) => ({
@@ -811,14 +1058,15 @@ export default function TambahProfilRisikoPage() {
                           >
                             <option>Keuangan Negara</option>
                             <option>Reputasi</option>
+                            <option>Korupsi</option>
                           </select>
                         </div>
 
                         {/* ALAT BUKTI */}
                         <div>
-                          <label className="text-sm">Alat Bukti</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Alat Bukti</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -831,16 +1079,34 @@ export default function TambahProfilRisikoPage() {
                         {/* URAIAN DAMPAK */}
                         <div>
                           <label className="text-sm">Uraian Dampak</label>
-                          <textarea
-                            className="w-full border p-2 rounded"
-                            value={form.dampak} // ✅ TAMBAH INI
-                            onChange={(e) =>
+
+                          <select
+                            id="dampak"
+                            className="w-full border p-2 rounded bg-white text-black"
+                            value={form.dampak}
+                            onChange={(e) => {
+                              const selected = referensiList.find(
+                                (item: any) => item.dampak === e.target.value,
+                              );
+
                               setForm((prev: any) => ({
                                 ...prev,
-                                dampak: e.target.value,
-                              }))
-                            }
-                          />
+                                dampak: selected?.dampak || e.target.value,
+                                dampakKategori:
+                                  selected?.dampak_kategori ||
+                                  selected?.kategori_dampak ||
+                                  prev.dampakKategori,
+                              }));
+                            }}
+                          >
+                            <option value="">Pilih Uraian Dampak</option>
+
+                            {dampakList.map((item: any) => (
+                              <option key={item.id} value={item.dampak}>
+                                {item.dampak}
+                              </option>
+                            ))}
+                          </select>
                         </div>
 
                         {/* BUTTON */}
@@ -887,21 +1153,21 @@ export default function TambahProfilRisikoPage() {
                               const updatedKomitmen = komitmen.map((k: any) =>
                                 k.id === selectedKomitmen
                                   ? {
-                                      ...k,
-                                      jadwalMR: {
-                                        ...k.jadwalMR,
-                                        komunikasi: true,
-                                        konteks: true,
-                                        identifikasi: true,
-                                      },
-                                    }
+                                    ...k,
+                                    jadwalMR: {
+                                      ...k.jadwalMR,
+                                      komunikasi: true,
+                                      konteks: true,
+                                      identifikasi: true,
+                                    },
+                                  }
                                   : k,
                               );
 
-                          
+
                               setStep(2);
                             }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded"
+                            className="bg-blue-600 text-white px-4 py-2 rounded font-bold"
                           >
                             Selanjutnya
                           </button>
@@ -918,10 +1184,10 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* 🔥 PERNYATAAN RISIKO (AUTO DARI STEP 1) */}
                         <div>
-                          <label className="text-sm">Pernyataan Risiko</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Pernyataan Risiko</label>
 
                           <select
-                            className="w-full border p-2 rounded bg-gray-100"
+                            className="w-full border p-2 rounded bg-gray-100 bg- white" text-black
                             value={risikoList[risikoList.length - 1]?.id || ""}
                             disabled
                           >
@@ -937,9 +1203,9 @@ export default function TambahProfilRisikoPage() {
                         {/* ========================= */}
 
                         <div>
-                          <label className="text-sm">Jenis Penyebab</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Jenis Penyebab</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             value={step2Form.jenis}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -952,13 +1218,16 @@ export default function TambahProfilRisikoPage() {
                             <option>Tekanan / Pressure</option>
                             <option>Kesempatan / Opportunity</option>
                             <option>Rasionalisasi</option>
+                             <option>Gaya Hidup</option>
+                            <option>Kapasitas</option>
+                            <option>Arogansi</option>
                           </select>
                         </div>
 
                         <div>
-                          <label className="text-sm">Penyebab Risiko</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Penyebab Risiko</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             value={step2Form.penyebab}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -970,9 +1239,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
 
                         <div>
-                          <label className="text-sm">Uraian Pengendalian</label>
+                          <label className="text-sm font-semibold text-gray-800 font-bold">Uraian Pengendalian</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             value={step2Form.pengendalian}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -984,9 +1253,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
 
                         <div>
-                          <label className="text-sm">Status</label>
+                          <label className="text-sm font-semibold text-gray-800 ">Status</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={step2Form.status}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1002,7 +1271,7 @@ export default function TambahProfilRisikoPage() {
                         </div>
 
                         {/* BUTTON TAMBAH PENYEBAB */}
-                        <div className="flex justify-end">
+                        <div className="flex justify-end mt-4">
                           <button
                             onClick={() => {
                               if (!step2Form.penyebab) return;
@@ -1025,7 +1294,7 @@ export default function TambahProfilRisikoPage() {
                                 status: "",
                               }));
                             }}
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2"
+                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2 font-bold"
                           >
                             Tambah +
                           </button>
@@ -1033,7 +1302,7 @@ export default function TambahProfilRisikoPage() {
 
                         {/* TABLE PENYEBAB */}
                         <table className="w-full text-xs border mt-3">
-                          <thead className="bg-purple-800 text-white">
+                          <thead className="bg-purple-800 text-white  text-center">
                             <tr>
                               <th className="p-2 border">No</th>
                               <th className="p-2 border">Jenis</th>
@@ -1049,7 +1318,7 @@ export default function TambahProfilRisikoPage() {
                               <tr>
                                 <td
                                   colSpan={6}
-                                  className="text-center p-3 text-gray-400"
+                                  className="text-center p-3 text-gray-400 bg-white font-bold"
                                 >
                                   Belum ada data
                                 </td>
@@ -1058,12 +1327,12 @@ export default function TambahProfilRisikoPage() {
                               penyebabList.map((p, i) => (
                                 <tr key={p.id}>
                                   <td className="border p-2">{p.kode}</td>
-                                  <td className="border p-2">{p.jenis}</td>
-                                  <td className="border p-2">{p.penyebab}</td>
-                                  <td className="border p-2">
+                                  <td className="border p-2 font-bold">{p.jenis}</td>
+                                  <td className="border p-2 font-bold">{p.penyebab}</td>
+                                  <td className="border p-2 font-bold">
                                     {p.pengendalian}
                                   </td>
-                                  <td className="border p-2">{p.status}</td>
+                                  <td className="border p-2 font-bold">{p.status}</td>
                                   <td className="border p-2 text-center">
                                     <button
                                       onClick={() =>
@@ -1071,7 +1340,7 @@ export default function TambahProfilRisikoPage() {
                                           prev.filter((x) => x.id !== p.id),
                                         )
                                       }
-                                      className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                                      className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold"
                                     >
                                       Hapus
                                     </button>
@@ -1087,7 +1356,7 @@ export default function TambahProfilRisikoPage() {
                         {/* ========================= */}
 
                         <div className="mt-5">
-                          <label className="text-sm">Pihak Terlibat</label>
+                          <label className="text-sm font-semibold text-gray-800">Pihak Terlibat</label>
                           <textarea
                             value={pihakForm.nama}
                             onChange={(e) =>
@@ -1096,12 +1365,12 @@ export default function TambahProfilRisikoPage() {
                                 nama: e.target.value,
                               }))
                             }
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                           />
                         </div>
 
                         <div>
-                          <label className="text-sm">
+                          <label className="text-sm font-semibold text-gray-800">
                             Internal / Eksternal
                           </label>
                           <select
@@ -1121,7 +1390,7 @@ export default function TambahProfilRisikoPage() {
                         </div>
 
                         <div>
-                          <label className="text-sm">Jabatan</label>
+                          <label className="text-sm font-semibold text-gray-800">Jabatan</label>
                           <textarea
                             value={pihakForm.jabatan}
                             onChange={(e) =>
@@ -1130,12 +1399,12 @@ export default function TambahProfilRisikoPage() {
                                 jabatan: e.target.value,
                               }))
                             }
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                           />
                         </div>
 
                         {/* BUTTON TAMBAH PIHAK */}
-                        <div className="flex justify-end">
+                        <div className="flex justify-end mt-4">
                           <button
                             onClick={() => {
                               if (!pihakForm.nama || !pihakForm.jenis) return;
@@ -1156,7 +1425,7 @@ export default function TambahProfilRisikoPage() {
                                 jabatan: "",
                               });
                             }}
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2"
+                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2 font-bold"
                           >
                             Tambah +
                           </button>
@@ -1190,7 +1459,7 @@ export default function TambahProfilRisikoPage() {
                                         prev.filter((x) => x.id !== p.id),
                                       )
                                     }
-                                    className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                                    className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold"
                                   >
                                     Hapus
                                   </button>
@@ -1224,7 +1493,7 @@ export default function TambahProfilRisikoPage() {
                                     kemungkinan: Number(e.target.value),
                                   }))
                                 }
-                                className="w-full border p-2 rounded"
+                                className="w-full border p-2 rounded bg-white text-black font-bold"
                               >
                                 <option value={1}>
                                   1 - Hampir Tidak Terjadi
@@ -1249,7 +1518,7 @@ export default function TambahProfilRisikoPage() {
                                     dampak: Number(e.target.value),
                                   }))
                                 }
-                                className="w-full border p-2 rounded"
+                                className="w-full border p-2 rounded bg-white text-black font-bold"
                               >
                                 <option value={1}>1 - Tidak Signifikan</option>
                                 <option value={2}>2 - Minor</option>
@@ -1264,12 +1533,12 @@ export default function TambahProfilRisikoPage() {
                           <div className="grid grid-cols-2 gap-3 mt-3">
                             <textarea
                               placeholder="Penjelasan Tingkat Kemungkinan"
-                              className="border p-2 rounded"
+                              className="border p-2 rounded bg-white text-black"
                             />
 
                             <textarea
                               placeholder="Penjelasan Tingkat Dampak"
-                              className="border p-2 rounded"
+                              className="border p-2 rounded bg-white text-black"
                             />
                           </div>
 
@@ -1279,19 +1548,13 @@ export default function TambahProfilRisikoPage() {
                               Skor Risiko (K x D)
                             </label>
 
-                            <input
-                              value={step2Form.skor}
-                              readOnly
-                              className={`w-full border p-2 rounded text-center font-bold ${
-                                step2Form.skor >= 20
-                                  ? "bg-red-500 text-white"
-                                  : step2Form.skor >= 16
-                                    ? "bg-orange-400 text-black"
-                                    : step2Form.skor >= 11
-                                      ? "bg-yellow-400 text-black"
-                                      : "bg-green-400 text-black"
-                              }`}
-                            />
+                           <input
+  value={step2Form.skor}
+  readOnly
+  className={`w-full border p-2 rounded text-center font-bold ${
+    getRiskColor(step2Form.skor)
+  }`}
+/>
                           </div>
                         </div>
 
@@ -1309,27 +1572,13 @@ export default function TambahProfilRisikoPage() {
                                 if (lastIndex >= 0) {
                                   updated[lastIndex] = {
                                     ...updated[lastIndex],
-                                    // STEP 2
+
                                     penyebabList,
                                     pihakList,
 
-                                    // STEP 4
-                                    rtp: rtpList,
-
-                                    // RTP SCORE
-                                    rtp_k: rtpScore.k,
-                                    rtp_d: rtpScore.d,
-                                    rtp_n: rtpScore.n,
-                                    sumber: rtpScore.sumber,
-                                    penyebab: penyebabList
-                                      .map((p) => p.penyebab)
-                                      .join(", "),
-                                    pengendalian: penyebabList
-                                      .map((p) => p.pengendalian)
-                                      .join(", "),
-                                    hasil: penyebabList
-                                      .map((p) => p.status)
-                                      .join(", "),
+                                    penyebab: penyebabList.map((p) => p.penyebab).join(", "),
+                                    pengendalian: penyebabList.map((p) => p.pengendalian).join(", "),
+                                    hasil: penyebabList.map((p) => p.status).join(", "),
 
                                     k: step2Form.kemungkinan,
                                     d: step2Form.dampak,
@@ -1348,27 +1597,7 @@ export default function TambahProfilRisikoPage() {
 
                                 return updated;
                               });
-                              const komitmen = JSON.parse(
-                                localStorage.getItem("komitmen") || "[]",
-                              );
 
-                              const updatedKomitmen = komitmen.map((k: any) =>
-                                k.id === selectedKomitmen
-                                  ? {
-                                      ...k,
-                                      jadwalMR: {
-                                        ...k.jadwalMR,
-                                        analisis: true,
-                                        evaluasi: true,
-                                      },
-                                    }
-                                  : k,
-                              );
-
-                              localStorage.setItem(
-                                "komitmen",
-                                JSON.stringify(updatedKomitmen),
-                              );
                               setStep(3);
                             }}
                             className="bg-blue-700 text-white px-4 py-2 rounded"
@@ -1385,9 +1614,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
 
                         <div>
-                          <label className="text-sm">Respon Risiko</label>
+                          <label className="text-sm font-semibold text-gray-800">Respon Risiko</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             value={step3Form.respon}
                             onChange={(e) =>
                               setStep3Form({ respon: e.target.value })
@@ -1429,12 +1658,12 @@ export default function TambahProfilRisikoPage() {
                               const updatedKomitmen = komitmen.map((k: any) =>
                                 k.id === selectedKomitmen
                                   ? {
-                                      ...k,
-                                      jadwalMR: {
-                                        ...k.jadwalMR,
-                                        respon: true,
-                                      },
-                                    }
+                                    ...k,
+                                    jadwalMR: {
+                                      ...k.jadwalMR,
+                                      respon: true,
+                                    },
+                                  }
                                   : k,
                               );
 
@@ -1453,17 +1682,17 @@ export default function TambahProfilRisikoPage() {
                     )}
 
                     {step === 4 && (
-                      <div className="space-y-4">
+                      <div className="space-y-4 text-black opacity-100">
                         <div className="bg-blue-50 p-3 text-xs border rounded">
                           Step 4: Rencana Tindak Pengendalian (RTP)
                         </div>
                         {/* PILIH PENYEBAB */}
                         <div>
-                          <label className="text-sm">
+                          <label className="text-sm font-semibold text-gray-800">
                             Pilih Penyebab Risiko
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black font-bold"
                             value={step4Form.penyebabId}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1482,9 +1711,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* RESPON */}
                         <div>
-                          <label className="text-sm">Respon Risiko</label>
+                          <label className="text-sm font-semibold text-gray-800">Respon Risiko</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={step4Form.respon}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1500,9 +1729,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* BERBAGI */}
                         <div>
-                          <label className="text-sm">Berbagi Risiko</label>
+                          <label className="text-sm font-semibold text-gray-800">Berbagi Risiko</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={step4Form.berbagi}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1514,9 +1743,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* JENIS KORUPSI */}
                         <div>
-                          <label className="text-sm">Jenis RTP Korupsi</label>
+                          <label className="text-sm font-semibold text-gray-800">Jenis RTP Korupsi</label>
                           <input
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={step4Form.jenisKorupsi}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1528,9 +1757,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* JENIS RTP */}
                         <div>
-                          <label className="text-sm">Jenis RTP</label>
+                          <label className="text-sm font-semibold text-gray-800">Jenis RTP</label>
                           <input
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={step4Form.jenisRtp}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1542,9 +1771,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* URAIAN */}
                         <div>
-                          <label className="text-sm">Uraian RTP</label>
+                          <label className="text-sm font-semibold text-gray-800">Uraian RTP</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={step4Form.uraian}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1556,9 +1785,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* INDIKATOR */}
                         <div>
-                          <label className="text-sm">Indikator Keluaran</label>
+                          <label className="text-sm font-semibold text-gray-800">Indikator Keluaran</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={step4Form.indikator}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1570,9 +1799,9 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* PERIODE */}
                         <div>
-                          <label className="text-sm">Periode</label>
+                          <label className="text-sm font-semibold text-gray-800">Periode</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={step4Form.periode}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1627,7 +1856,7 @@ export default function TambahProfilRisikoPage() {
                         </div>
                         {/* TABLE */}
                         <table className="w-full text-xs border mt-4">
-                          <thead className="bg-purple-800 text-white">
+                          <thead className="bg-purple-800 text-white ">
                             <tr>
                               <th className="border p-2">No</th>
                               <th className="border p-2">K. Penyebab</th>
@@ -1736,17 +1965,34 @@ export default function TambahProfilRisikoPage() {
                           </h4>
 
                           {/* ALOKASI */}
-                          <textarea
-                            placeholder="Alokasi Sumber Daya"
-                            className="w-full border p-2 rounded mb-3"
-                            value={rtpScore.sumber}
-                            onChange={(e) =>
-                              setRtpScore((prev) => ({
-                                ...prev,
-                                sumber: e.target.value,
-                              }))
-                            }
-                          />
+                        <div className="border rounded p-3 mb-3">
+  <label className="font-semibold text-sm block mb-2">
+    Alokasi Sumber Daya (5M)
+  </label>
+
+  {["Man", "Money", "Method", "Machine", "Material"].map((item) => (
+    <label key={item} className="flex items-center gap-2 mb-2">
+      <input
+        type="checkbox"
+        checked={rtpScore.sumber.includes(item)}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setRtpScore((prev) => ({
+              ...prev,
+              sumber: [...prev.sumber, item],
+            }));
+          } else {
+            setRtpScore((prev) => ({
+              ...prev,
+              sumber: prev.sumber.filter((x) => x !== item),
+            }));
+          }
+        }}
+      />
+      {item}
+    </label>
+  ))}
+</div>
 
                           <div className="grid grid-cols-2 gap-3">
                             <div className="grid grid-cols-2 gap-3 mt-3">
@@ -1814,19 +2060,14 @@ export default function TambahProfilRisikoPage() {
                           </div>
 
                           {/* NILAI */}
-                          <input
-                            value={rtpScore.n}
-                            readOnly
-                            className={`w-full mt-3 p-2 text-center font-bold rounded ${
-                              rtpScore.n >= 20
-                                ? "bg-red-500 text-white"
-                                : rtpScore.n >= 16
-                                  ? "bg-orange-400"
-                                  : rtpScore.n >= 11
-                                    ? "bg-yellow-400"
-                                    : "bg-green-400"
-                            }`}
-                          />
+                          {/* NILAI RTP */}
+<input
+  value={rtpScore.n}
+  readOnly
+  className={`w-full border p-2 rounded text-center font-bold ${
+    getRiskColor(rtpScore.n)
+  }`}
+/>
                         </div>
                         {/* ========================= */}
                         {/* 🟣 UNIT TEMBUSAN */}
@@ -1982,108 +2223,12 @@ export default function TambahProfilRisikoPage() {
                         {/* ========================= */}
                         <div className="flex justify-end mt-5">
                           <button
-                            onClick={() => {
-                              setRisikoList((prev) => {
-                                const updated = [...prev];
-                                const last = updated.length - 1;
-
-                                if (last >= 0) {
-                                  const allTarget = rtpList.flatMap(
-                                    (r) => r.targetList || [],
-                                  );
-
-                                  const newData = {
-                                    ...updated[last],
-
-                                    komitmenId: selectedKomitmen,
-
-                                    rtp: rtpList,
-                                    rtp_k: rtpScore.k,
-                                    rtp_d: rtpScore.d,
-                                    rtp_n: rtpScore.n,
-                                    sumber: rtpScore.sumber,
-
-                                    targetGabungan: allTarget
-                                      .map((t) => t.waktu)
-                                      .join(", "),
-                                    targetUraian: allTarget
-                                      .map((t) => t.uraian)
-                                      .join(", "),
-
-                                    unit: unitList
-                                      .map((u) => u.nama)
-                                      .join(", "),
-                                    klasifikasi,
-                                  };
-
-                                  updated[last] = newData;
-
-                                  // 🔥 SIMPAN KE localStorage
-                                  const existing = JSON.parse(
-                                    localStorage.getItem("profil-risiko") ||
-                                      "[]",
-                                  );
-                                  const komitmen = JSON.parse(
-                                    localStorage.getItem("komitmen") || "[]",
-                                  );
-
-                                  const updatedKomitmen = komitmen.map(
-                                    (k: any) =>
-                                      k.id === selectedKomitmen
-                                        ? {
-                                            ...k,
-                                            jadwalMR: {
-                                              ...k.jadwalMR,
-                                              pemantauan: true,
-                                              laporan: true,
-                                            },
-                                          }
-                                        : k,
-                                  );
-
-                                  localStorage.setItem(
-                                    "komitmen",
-                                    JSON.stringify(updatedKomitmen),
-                                  );
-                                  localStorage.setItem(
-                                    "profil-risiko",
-                                    JSON.stringify([...existing, newData]),
-                                  );
-                                  const komitmen2 = JSON.parse(
-                                    localStorage.getItem("komitmen") || "[]",
-                                  );
-
-                                  const updatedKomitmen2 = komitmen2.map(
-                                    (k: any) =>
-                                      k.id === selectedKomitmen
-                                        ? {
-                                            ...k,
-                                            jadwalMR: {
-                                              ...k.jadwalMR,
-                                              rtp: true,
-                                            },
-                                          }
-                                        : k,
-                                  );
-
-                                  localStorage.setItem(
-                                    "komitmen",
-                                    JSON.stringify(updatedKomitmen2),
-                                  );
-                                }
-
-                                return updated;
-                              });
-
-                              setOpenModal(false);
-                              setStep(1);
-                            }}
+                            onClick={simpanLangsungDatabase}
                             className="bg-green-600 text-white px-4 py-2 rounded"
                           >
                             Simpan
                           </button>
                         </div>
-                        );
                       </div>
                     )}
                   </div>

@@ -381,7 +381,20 @@ export const getVerifikatorData = async () => {
   return safeArray(json);
 };
 
-export const updateVerifikatorStatus = async (id: number, status: string) => {
+export const getVerifikatorDetail = async (id: string | number) => {
+  const res = await fetch(`${API}/verifikator-data/${id}`, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  return safeJson(res);
+};
+
+export const updateVerifikatorStatus = async (
+  id: string | number,
+  status: string
+) => {
   const res = await fetch(`${API}/verifikator-data/${id}/status`, {
     method: "PUT",
     headers: {

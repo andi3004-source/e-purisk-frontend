@@ -13,14 +13,106 @@ export default function ProfilPage() {
   const komitmen = komitmenList.find(
     (k) => Number(k.id) === Number(selectedId),
   );
-
+  console.log("selectedId =", selectedId);
+  console.log("komitmen =", komitmen);
+  console.log("komitmenList =", komitmenList);
   const [pakta, setPakta] = useState("");
   const [tujuan, setTujuan] = useState("");
   const [internal, setInternal] = useState<any[]>([]);
   const [eksternal, setEksternal] = useState<any[]>([]);
   const [profilRisiko, setProfilRisiko] = useState<any[]>([]);
+  const [jadwalMR, setJadwalMR] = useState<any[]>([]);
   const [ledData, setLedData] = useState<any[]>([]);
 
+ const [jadwal, setJadwal] = useState([
+  {
+    no: "1",
+    tahap: "Komunikasi dan Konsultasi",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "2",
+    tahap: "Komitmen MR",
+    header: true,
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "2.a",
+    tahap: "Penetapan Konteks dan Lingkup",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "2.b",
+    tahap: "Identifikasi Risiko",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "2.c",
+    tahap: "Analisis Risiko",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "2.d",
+    tahap: "Evaluasi Risiko",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "3",
+    tahap: "Respon Risiko",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "4",
+    tahap: "Rencana Tindak Pengendalian",
+    header: true,
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "4.a",
+    tahap: "Eskalasi",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "4.b",
+    tahap: "Penguatan",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "4.c",
+    tahap: "Penguatan",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "5",
+    tahap: "Pemantauan dan Tinjauan",
+    data: Array(48).fill(0),
+  },
+
+  {
+    no: "6",
+    tahap: "Laporan Penerapan MR",
+    data: Array(48).fill(0),
+  },
+]);
+const toggleCell = (rowIndex: number, colIndex: number) => {
+  const newData = [...jadwalMR];
+
+  newData[rowIndex].data[colIndex] =
+    newData[rowIndex].data[colIndex] === 1 ? 0 : 1;
+
+  setJadwalMR(newData);
+};
   const safeJson = (value: any) => {
     try {
       if (Array.isArray(value)) return value;
@@ -67,7 +159,22 @@ export default function ProfilPage() {
       unitTembusan: safeJson(item.unit_tembusan),
     };
   };
+  const getKategoriColor = (kategori: any) => {
+    const k = String(kategori || "").toLowerCase();
 
+    if (k.includes("korupsi")) return "bg-red-500 text-white";
+    if (k.includes("keuangan")) return "bg-green-500 text-white";
+    if (k.includes("hukum")) return "bg-blue-500 text-white";
+    if (k.includes("kinerja")) return "bg-yellow-400 text-black";
+    if (k.includes("layanan")) return "bg-cyan-500 text-white";
+    if (k.includes("reputasi")) return "bg-purple-500 text-white";
+    if (k.includes("kecelakaan")) return "bg-orange-500 text-white";
+    if (k.includes("spbe")) return "bg-indigo-500 text-white";
+    if (k.includes("lainnya")) return "bg-gray-500 text-white";
+    if (k.includes("umum")) return "bg-slate-500 text-white";
+
+    return "bg-gray-500 text-white";
+  };
   const downloadPDF = () => {
     const content = document.getElementById("pdf-area");
 
@@ -244,7 +351,7 @@ export default function ProfilPage() {
       try {
         const res = await axios.get("http://127.0.0.1:8000/api/komitmen");
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-
+        console.log(res.data);
         setKomitmenList(data);
 
         if (data.length > 0) {
@@ -267,10 +374,65 @@ export default function ProfilPage() {
 
     setPakta(found?.pakta || "");
     setTujuan(found?.tujuan || "");
-
     setInternal(safeJson(found?.internal));
     setEksternal(safeJson(found?.eksternal));
+    setJadwalMR(
+  safeJson(
+    found?.jadwalMR ||
+    found?.jadwal_mr ||
+    found?.jadwal
+  )
+);
+    const sasaranFromKomitmen = safeJson(
+      found?.sasaran ||
+      found?.sasaranList ||
+      found?.sasarans
+    ).map((s: any) => ({
+      sasaranStrategis:
+        s.sasaranStrategis || s.sasaran_strategis || "-",
+
+
+      indikatorStrategis:
+        s.indikatorStrategis || s.indikator_strategis || "-",
+
+      sasaranProgram:
+        s.sasaranProgram || s.sasaran_program || "-",
+
+      indikatorProgram:
+        s.indikatorProgram || s.indikator_program || "-",
+
+      sasaranKegiatan:
+        s.sasaranKegiatan || s.sasaran_kegiatan || "-",
+
+      indikatorKegiatan:
+        s.indikatorKegiatan || s.indikator_kegiatan || "-",
+
+      indikator: Array.isArray(s.indikator)
+        ? s.indikator
+        : [
+          {
+            nama: s.indikatorKegiatan || s.indikator_kegiatan || "-",
+            sub: [
+              {
+                nama: s.subIndikator || s.sub_indikator || "-",
+                kegiatan: [
+                  {
+                    nama: s.subIndikator || s.sub_indikator || "-",
+                    anggaran: 0,
+                    tujuan: [s.sasaranKegiatan || s.sasaran_kegiatan || "-"],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+
+
+    }));
+
+    setSasaranList(sasaranFromKomitmen);
   }, [selectedId, komitmenList]);
+
 
   const mapA: any = {};
   const mapB: any = {};
@@ -300,37 +462,37 @@ export default function ProfilPage() {
     risiko.length >= 4 && risiko.every((r: any) => r.status === "approved");
 
   const kirimVerifikator = async () => {
-  if (!komitmen) {
-    alert("Komitmen belum dipilih!");
-    return;
-  }
+    if (!komitmen) {
+      alert("Komitmen belum dipilih!");
+      return;
+    }
 
-  try {
-    await kirimVerifikatorData({
-      komitmen_id: komitmen.id,
-      periode: komitmen.periode,
-      unit: komitmen.unit,
-      pemilik: komitmen.pemilik,
-      pengelola: komitmen.pengelola,
+    try {
+      await kirimVerifikatorData({
+        komitmen_id: komitmen.id,
+        periode: komitmen.periode,
+        unit: komitmen.unit,
+        pemilik: komitmen.pemilik,
+        pengelola: komitmen.pengelola,
 
-      pakta,
-      tujuan,
-      internal,
-      eksternal,
-      sasaranList,
-      profilRisiko,
+        pakta,
+        tujuan,
+        internal,
+        eksternal,
+        sasaranList,
+        profilRisiko,
 
-      jadwalMR: komitmen.jadwalMR || {},
-      status: "Pending",
-      tanggalKirim: new Date().toISOString(),
-    });
+        jadwalMR: komitmen.jadwalMR || {},
+        status: "Pending",
+        tanggalKirim: new Date().toISOString(),
+      });
 
-    alert("Berhasil dikirim ke Verifikator");
-  } catch (error) {
-    console.error(error);
-    alert("Gagal kirim ke Verifikator");
-  }
-};
+      alert("Berhasil dikirim ke Verifikator");
+    } catch (error) {
+      console.error(error);
+      alert("Gagal kirim ke Verifikator");
+    }
+  };
 
   const risikoKorupsi = profilRisiko.filter((r: any) =>
     (r.kategori || "").toLowerCase().includes("korupsi"),
@@ -342,6 +504,12 @@ export default function ProfilPage() {
     [6, 12, 16, 19, 24],
     [11, 15, 18, 23, 25],
   ];
+  const getNilaiRisiko = (k: number, d: number) => {
+    if (!k || !d) return 0;
+    return matrix[k - 1][d - 1];
+  };
+
+
   // ===== COLOR =====
   const [detail, setDetail] = useState<any>(null);
 
@@ -573,10 +741,10 @@ export default function ProfilPage() {
                                 <td className="border p-2">
                                   {keg.tujuan?.length
                                     ? keg.tujuan.map((t: any, idx: number) => (
-                                        <div key={idx}>
-                                          {idx + 1}. {t}
-                                        </div>
-                                      ))
+                                      <div key={idx}>
+                                        {idx + 1}. {t}
+                                      </div>
+                                    ))
                                     : "-"}
                                 </td>
                               </tr>
@@ -799,9 +967,14 @@ export default function ProfilPage() {
 
                 <tbody>
                   {profilRisiko.map((r: any, i: number) => {
-                    const nilai = (Number(r.k) || 0) * (Number(r.d) || 0);
-                    const nilaiTarget =
-                      (Number(r.rtp_k) || 0) * (Number(r.rtp_d) || 0);
+                    const nilai = getNilaiRisiko(
+                      Number(r.k),
+                      Number(r.d)
+                    );
+                    const nilaiTarget = getNilaiRisiko(
+                      Number(r.rtp_k),
+                      Number(r.rtp_d)
+                    );
 
                     return (
                       <tr key={`risiko-${r.id}-${i}`}>
@@ -811,15 +984,17 @@ export default function ProfilPage() {
                         <td className="border p-2">{r.pernyataan}</td>
 
                         <td className="border p-2">
-                          <span
-                            className={`px-2 py-1 rounded text-xs text-white
-                ${r.kategori === "Risiko Korupsi" ? "bg-red-500" : ""}
-                ${r.kategori === "Risiko Keuangan" ? "bg-green-500" : ""}
-                ${r.kategori === "Risiko Hukum" ? "bg-blue-500" : ""}
-              `}
-                          >
-                            {r.kategori}
-                          </span>
+                          <td className="border p-2">
+                            <span
+                              className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getKategoriColor(
+                                r.kategori
+                              )}`}
+                            >
+                              {typeof r.kategori === "object"
+                                ? JSON.stringify(r.kategori)
+                                : r.kategori || "-"}
+                            </span>
+                          </td>
                         </td>
 
                         <td className="border p-2">{r.penyebab}</td>
@@ -986,9 +1161,14 @@ export default function ProfilPage() {
                     </tr>
                   ) : (
                     risikoKorupsi.map((r: any, i: number) => {
-                      const nilai = (Number(r.k) || 0) * (Number(r.d) || 0);
-                      const nilaiTarget =
-                        (Number(r.rtp_k) || 0) * (Number(r.rtp_d) || 0);
+                      const nilai = getNilaiRisiko(
+                        Number(r.k),
+                        Number(r.d)
+                      );
+                      const nilaiTarget = getNilaiRisiko(
+                        Number(r.rtp_k),
+                        Number(r.rtp_d)
+                      );
 
                       return (
                         <tr key={r.id || i}>
@@ -1085,8 +1265,8 @@ export default function ProfilPage() {
                           <td className="border p-2">
                             {r.rtp?.length
                               ? r.rtp
-                                  .map((x: any) => x.penanggungJawab)
-                                  .join(", ")
+                                .map((x: any) => x.penanggungJawab)
+                                .join(", ")
                               : r.penanggungJawab || "-"}
                           </td>
                         </tr>
@@ -1102,79 +1282,129 @@ export default function ProfilPage() {
             Jadwal Pelaksanaan Manajemen Risiko
           </p>
 
-          <table className="w-full border text-sm">
-            <thead className="bg-blue-800 text-white">
-              <tr>
-                <th className="border p-2">Tahap MR</th>
-                <th className="border p-2">Status</th>
-              </tr>
-            </thead>
+        <div className="bg-white rounded-xl shadow p-5">
+  <div className="flex items-center justify-between mb-4">
+    <div>
+      <h2 className="text-xl font-bold text-gray-800">
+        Jadwal Pelaksanaan Manajemen Risiko
+      </h2>
+      <p className="text-sm text-gray-500">
+        Klik kotak untuk menandai minggu pelaksanaan
+      </p>
+    </div>
 
-            <tbody>
-              <tr>
-                <td className="border p-2">Komunikasi & Konsultasi</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.komunikasi ? "✔" : "-"}
-                </td>
-              </tr>
+    <div className="flex gap-4 text-sm">
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 bg-green-500 rounded" />
+        <span>Aktif</span>
+      </div>
 
-              <tr>
-                <td className="border p-2">Penetapan Konteks</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.konteks ? "✔" : "-"}
-                </td>
-              </tr>
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 border rounded" />
+        <span>Belum Direncanakan</span>
+      </div>
+    </div>
+  </div>
 
-              <tr>
-                <td className="border p-2">Identifikasi Risiko</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.identifikasi ? "✔" : "-"}
-                </td>
-              </tr>
+  <div className="overflow-auto border rounded-lg">
+    <table className="border-collapse text-xs min-w-max w-full">
+      <thead className="sticky top-0 z-10">
+        <tr className="bg-blue-900 text-white">
+          <th
+            rowSpan={2}
+            className="border px-3 py-2 min-w-[60px]"
+          >
+            No
+          </th>
 
-              <tr>
-                <td className="border p-2">Analisis Risiko</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.analisis ? "✔" : "-"}
-                </td>
-              </tr>
+          <th
+            rowSpan={2}
+            className="border px-3 py-2 min-w-[280px]"
+          >
+            Tahap
+          </th>
 
-              <tr>
-                <td className="border p-2">Evaluasi Risiko</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.evaluasi ? "✔" : "-"}
-                </td>
-              </tr>
+          {[
+            "Jan","Feb","Mar","Apr",
+            "Mei","Jun","Jul","Agt",
+            "Sep","Okt","Nov","Des"
+          ].map((bulan) => (
+            <th
+              key={bulan}
+              colSpan={4}
+              className="border px-2 py-2"
+            >
+              {bulan}
+            </th>
+          ))}
+        </tr>
 
-              <tr>
-                <td className="border p-2">Respon Risiko</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.respon ? "✔" : "-"}
-                </td>
-              </tr>
+        <tr className="bg-blue-700 text-white">
+          {Array.from({ length: 48 }).map((_, i) => (
+            <th
+              key={i}
+              className="border w-8 h-8"
+            >
+              {(i % 4) + 1}
+            </th>
+          ))}
+        </tr>
+      </thead>
 
-              <tr>
-                <td className="border p-2">RTP</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.rtp ? "✔" : "-"}
-                </td>
-              </tr>
+      <tbody>
+        {jadwalMR.map((item, rowIndex) => (
+          <tr
+            key={rowIndex}
+            className="hover:bg-gray-50"
+          >
+            <td className="border text-center">
+              {item.no}
+            </td>
 
-              <tr>
-                <td className="border p-2">Pemantauan</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.pemantauan ? "✔" : "-"}
-                </td>
-              </tr>
+            <td
+              className={`border px-3 py-2 ${
+                item.header
+                  ? "font-bold bg-gray-100"
+                  : ""
+              }`}
+            >
+              {item.tahap}
+            </td>
 
-              <tr>
-                <td className="border p-2">Laporan MR</td>
-                <td className="border p-2 text-center">
-                  {komitmen?.jadwalMR?.laporan ? "✔" : "-"}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+            {item.data.map(
+              (v: any, colIndex: number) => (
+                <td
+                  key={colIndex}
+                  className={`
+                    border
+                    w-8
+                    h-8
+                    cursor-pointer
+                    transition
+                    hover:bg-green-200
+                    ${
+                      v
+                        ? "bg-green-500"
+                        : "bg-white"
+                    }
+                  `}
+                />
+              )
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div className="flex justify-end mt-4">
+    <button
+      className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-medium"
+    >
+      Simpan Jadwal MR
+    </button>
+  </div>
+</div>
           {/* 🔥 PETA RISIKO */}
           <div className="bg-white rounded-xl shadow p-5">
             <h2 className="font-semibold mb-2">Peta Risiko</h2>

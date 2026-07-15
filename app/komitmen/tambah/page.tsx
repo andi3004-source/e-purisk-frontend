@@ -11,77 +11,135 @@ export default function TambahKomitmenPage() {
   const [form, setForm] = useState<any>({});
   const [pegawai, setPegawai] = useState<any[]>([]);
 
-  // 🔥 ambil pegawai dari localStorage
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("pegawai") || "[]");
-    setPegawai(data);
+    const fetchPegawai = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/pegawai", {
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        const json = await res.json();
+
+        const data = Array.isArray(json)
+          ? json
+          : Array.isArray(json.data)
+          ? json.data
+          : Array.isArray(json.data?.data)
+          ? json.data.data
+          : [];
+
+        setPegawai(data);
+      } catch (error) {
+        console.error("Gagal ambil pegawai:", error);
+      }
+    };
+
+    fetchPegawai();
   }, []);
 
-  // 🔥 HANDLE SELECT (AUTO NIP + JABATAN)
-  const handleSelect = (type: "pemilik" | "pengelola", nama: string) => {
-    const selected = pegawai.find((p: any) => p.nama === nama);
+  const handleSelectPegawai = (
+    type: "pemilik" | "pengelola",
+    idPegawai: string
+  ) => {
+    const selected = pegawai.find((p: any) => String(p.id) === idPegawai);
+
     if (!selected) return;
 
     if (type === "pemilik") {
-      setForm({
-        ...form,
-        pemilik: selected.nama,
-        nip_pemilik: selected.nip,
-        jabatan_pemilik: selected.jabatan,
-      });
+      setForm((prev: any) => ({
+        ...prev,
+        pemilik: selected.nama || "",
+        nip_pemilik: selected.nip || "",
+        jabatan_pemilik: selected.jabatan || "",
+      }));
     }
 
     if (type === "pengelola") {
-      setForm({
-        ...form,
-        pengelola: selected.nama,
-        nip_pengelola: selected.nip,
-        jabatan_pengelola: selected.jabatan,
-      });
+      setForm((prev: any) => ({
+        ...prev,
+        pengelola: selected.nama || "",
+        nip_pengelola: selected.nip || "",
+        jabatan_pengelola: selected.jabatan || "",
+      }));
     }
   };
 
-  // 🔥 HANDLE INPUT BIASA
   const handleChange = (e: any) => {
     const { name, value } = e.target;
-    setForm({
-      ...form,
+
+    setForm((prev: any) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
-  // 🔥 SIMPAN
-  const handleSubmit = () => {
-    const existing = JSON.parse(localStorage.getItem("komitmen") || "[]");
+  const handleSubmit = async () => {
+try {
+if (!form.tahun) {
+alert("Tahun wajib dipilih");
+return;
+}
 
-    const newData = {
-      id: Date.now(),
-      periode: form.tahun,
-      level: "UPR T2",
-      unit: "",
+if (!form.pemilik) {
+  alert("Pemilik Risiko wajib dipilih");
+  return;
+}
 
-      pemilik: form.pemilik,
-  nip_pemilik: form.nip_pemilik,
-  jabatan_pemilik: form.jabatan_pemilik,
+if (!form.pengelola) {
+  alert("Pengelola Risiko wajib dipilih");
+  return;
+}
 
-  pengelola: form.pengelola,
-  nip_pengelola: form.nip_pengelola,
-  jabatan_pengelola: form.jabatan_pengelola,
+const payload = {
+  periode: form.tahun,
+  level: "UPR T2",
+  unit: "OPERASI DAN PEMELIHARAAN SUMBER DAYA AIR BENGAWAN SOLO",
 
-  anggaran: form.anggaran,
-  link: form.link,
+  pemilik: form.pemilik || "",
+  nip_pemilik: form.nip_pemilik || "",
+  jabatan_pemilik: form.jabatan_pemilik || "",
+
+  pengelola: form.pengelola || "",
+  nip_pengelola: form.nip_pengelola || "",
+  jabatan_pengelola: form.jabatan_pengelola || "",
+
+  anggaran: Number(form.anggaran || 0),
+  link: form.link || "",
 
   status: "Draft",
-    };
+};
 
-    const updated = [...existing, newData];
+const res = await fetch("http://127.0.0.1:8000/api/komitmen", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+  body: JSON.stringify(payload),
+});
 
-    localStorage.setItem("komitmen", JSON.stringify(updated));
+const json = await res.json();
 
-    alert("✅ Komitmen berhasil disimpan");
+if (!res.ok) {
+  console.error("Gagal simpan komitmen:", json);
+  alert("Gagal simpan komitmen ke database");
+  return;
+}
 
-    router.push(`/komitmen/${newData.id}`);
-  };
+alert("✅ Komitmen berhasil disimpan ke database");
+
+const savedData = json.data || json;
+
+router.push(`/komitmen/${savedData.id}`);
+
+} catch (error) {
+console.error("ERROR SIMPAN KOMITMEN:", error);
+alert("Terjadi error saat menyimpan komitmen");
+}
+};
+
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -91,75 +149,102 @@ export default function TambahKomitmenPage() {
         <Navbar />
 
         <div className="p-6">
-          <h1 className="text-lg font-semibold mb-4">
+          <h1 className="text-lg font-semibold mb-4 text-gray-900">
             Tambah Komitmen MR
           </h1>
 
           <div className="bg-white rounded-xl shadow p-6">
             <div className="space-y-4">
-
-              {/* TAHUN */}
               <div>
-                <label className="text-sm text-gray-800 font-medium">Tahun</label>
+                <label className="text-sm text-gray-800 font-medium">
+                  Tahun
+                </label>
+
                 <select
                   name="tahun"
                   onChange={handleChange}
                   className="w-full border rounded p-2 mt-1 text-black bg-white"
                 >
-                  <option>Pilih Tahun</option>
+                  <option value="">Pilih Tahun</option>
+
                   {[2023, 2024, 2025, 2026].map((t) => (
-                    <option key={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              {/* PEMILIK */}
               <div>
-                <label className="text-sm text-gray-800 font-medium">Pemilik Risiko</label>
+                <label className="text-sm text-gray-800 font-medium">
+                  Pemilik Risiko
+                </label>
+
                 <select
                   onChange={(e) =>
-                    handleSelect("pemilik", e.target.value)
+                    handleSelectPegawai("pemilik", e.target.value)
                   }
-                  className="w-full border rounded p-2 mt-1"
+                  className="w-full border rounded p-2 mt-1 bg-white text-gray-900"
                 >
-                  <option>Pilih Pemilik Risiko</option>
+                  <option value="">Pilih Pemilik Risiko</option>
+
                   {pegawai.map((p) => (
-                    <option key={p.id}>{p.nama}</option>
+                    <option key={p.id} value={p.id}>
+                      {p.nama} - {p.jabatan}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              {/* JABATAN PEMILIK */}
               <input
                 value={form.jabatan_pemilik || ""}
                 readOnly
+                placeholder="Jabatan Pemilik"
                 className="w-full border p-2 bg-white text-black rounded"
               />
 
-              {/* PENGELOLA */}
+              <input
+                value={form.nip_pemilik || ""}
+                readOnly
+                placeholder="NIP Pemilik"
+                className="w-full border p-2 bg-white text-black rounded"
+              />
+
               <div>
-                <label className="text-sm text-gray-800 font-medium">Pengelola Risiko</label>
+                <label className="text-sm text-gray-800 font-medium">
+                  Pengelola Risiko
+                </label>
+
                 <select
                   onChange={(e) =>
-                    handleSelect("pengelola", e.target.value)
+                    handleSelectPegawai("pengelola", e.target.value)
                   }
-                  className="w-full border rounded p-2 mt-1"
+                  className="w-full border rounded p-2 mt-1 bg-white text-gray-900"
                 >
-                  <option>Pilih Pengelola</option>
+                  <option value="">Pilih Pengelola Risiko</option>
+
                   {pegawai.map((p) => (
-                    <option key={p.id}>{p.nama}</option>
+                    <option key={p.id} value={p.id}>
+                      {p.nama} - {p.jabatan}
+                    </option>
                   ))}
                 </select>
               </div>
 
-              {/* JABATAN PENGELOLA */}
               <input
                 value={form.jabatan_pengelola || ""}
                 readOnly
+                placeholder="Jabatan Pengelola"
                 className="w-full border p-2 bg-white text-black rounded"
               />
 
-              {/* ANGGARAN */}
+              <input
+                value={form.nip_pengelola || ""}
+                readOnly
+                placeholder="NIP Pengelola"
+                className="w-full border p-2 bg-white text-black rounded"
+              />
+
               <input
                 name="anggaran"
                 onChange={handleChange}
@@ -167,7 +252,6 @@ export default function TambahKomitmenPage() {
                 className="w-full border p-2 rounded text-black bg-white"
               />
 
-              {/* LINK */}
               <input
                 name="link"
                 onChange={handleChange}
@@ -181,7 +265,6 @@ export default function TambahKomitmenPage() {
               >
                 Simpan
               </button>
-
             </div>
           </div>
         </div>

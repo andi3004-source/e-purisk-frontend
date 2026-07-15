@@ -1,11 +1,9 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import React from "react";
-import { usePathname } from "next/navigation";
 import axios from "axios";
 export default function TambahProfilRisikoPage() {
   const router = useRouter();
@@ -13,9 +11,7 @@ export default function TambahProfilRisikoPage() {
   // STATE
   const [openModal, setOpenModal] = useState(false);
   const [step, setStep] = useState(1);
-  const [selectedPaket, setSelectedPaket] = useState<any>(null);
   const [selectedKomitmen, setSelectedKomitmen] = useState<any>(null);
-  const [paketList, setPaketList] = useState<any[]>([]);
   const [risikoList, setRisikoList] = useState<any[]>([]);
   const [penyebabList, setPenyebabList] = useState<any[]>([]);
   const searchParams = useSearchParams();
@@ -59,6 +55,7 @@ export default function TambahProfilRisikoPage() {
     tahapan: "",
     led: "",
     pernyataan: "",
+    kategori: "",
     penanggungJawab: "",
     dampakKategori: "",
     alatBukti: "",
@@ -68,13 +65,15 @@ export default function TambahProfilRisikoPage() {
 
   const [step4Form, setStep4Form] = useState({
     penyebabId: "",
+    penyebab: "",
     respon: "",
     jenisRtp: "",
     berbagi: "",
     uraian: "",
     indikator: "",
-    periode: "SEMESTER",
+    periode: "",
   });
+
   const [rtpScore, setRtpScore] = useState({
     k: 1,
     d: 1,
@@ -93,16 +92,7 @@ export default function TambahProfilRisikoPage() {
     waktu: "",
     uraian: "",
   });
-  const pathname = usePathname();
-  const [referensiList, setReferensiList] = useState<any[]>([]);
-  const [selectedReferensiId, setSelectedReferensiId] = useState("");
-  const kategoriRisiko = pathname.includes("lainnya")
-    ? "Risiko Lainnya"
-    : pathname.includes("hukum")
-      ? "Risiko Hukum"
-      : pathname.includes("keuangan")
-        ? "Risiko Keuangan"
-        : "";
+
   useEffect(() => {
     const fetchKomitmen = async () => {
       try {
@@ -117,12 +107,7 @@ export default function TambahProfilRisikoPage() {
     fetchKomitmen();
   }, []);
 
-  useEffect(() => {
-    setForm((prev: any) => ({
-      ...prev,
-      kategori: kategoriRisiko,
-    }));
-  }, [kategoriRisiko]);
+
   useEffect(() => {
     if (!komitmenId) return;
 
@@ -146,19 +131,7 @@ export default function TambahProfilRisikoPage() {
     }
   }, [komitmenId, komitmenList]);
 
-  useEffect(() => {
-    const fetchPaket = async () => {
-      try {
-        const res = await axios.get("http://127.0.0.1:8000/api/paket");
 
-        setPaketList(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchPaket();
-  }, []);
   useEffect(() => {
     if (komitmenId) {
       setSelectedKomitmen(Number(komitmenId));
@@ -206,16 +179,7 @@ export default function TambahProfilRisikoPage() {
       });
     }
   };
-  const kegiatanList = [
-    {
-      nama: "Operasi dan Pemeliharaan SDA",
-      tujuanList: ["Operasi Bendung", "Pengelolaan SDA"],
-    },
-    {
-      nama: "Pembangunan Bendungan",
-      tujuanList: ["Peningkatan Infrastruktur"],
-    },
-  ];
+
 
   useEffect(() => {
     const matrix = [
@@ -237,42 +201,6 @@ export default function TambahProfilRisikoPage() {
     });
   }, [rtpScore.k, rtpScore.d]);
 
-  useEffect(() => {
-    const fetchReferensiRisiko = async () => {
-      try {
-        const res = await axios.get(
-          `http://127.0.0.1:8000/api/referensi-risiko?kategori=${encodeURIComponent(kategoriRisiko)}`,
-        );
-
-        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-
-        setReferensiList(data);
-      } catch (error) {
-        console.error("Gagal ambil referensi risiko:", error);
-      }
-    };
-
-    if (kategoriRisiko) {
-      fetchReferensiRisiko();
-    }
-  }, [kategoriRisiko]);
-
-  const tahapanList = Array.from(
-    new Set(
-      referensiList
-        .map((item: any) => item.tahapan)
-        .filter((item: any) => item && item !== ""),
-    ),
-  );
-
-  const pernyataanList = referensiList.filter((item: any) => {
-    if (!form.tahapan) return false;
-    return item.tahapan === form.tahapan;
-  });
-
-  const selectedReferensi = referensiList.find(
-    (item: any) => String(item.id) === String(selectedReferensiId),
-  );
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -487,10 +415,10 @@ export default function TambahProfilRisikoPage() {
                         <td className="border p-2">
                           {Array.isArray(r.penyebab)
                             ? r.penyebab
-                                .map((p: any) =>
-                                  typeof p === "object" ? p.penyebab || "-" : p,
-                                )
-                                .join(", ")
+                              .map((p: any) =>
+                                typeof p === "object" ? p.penyebab || "-" : p,
+                              )
+                              .join(", ")
                             : r.penyebab || "-"}
                         </td>
 
@@ -510,21 +438,21 @@ export default function TambahProfilRisikoPage() {
                         <td className="border p-2">
                           {Array.isArray(r.penyebabList)
                             ? r.penyebabList
-                                .map((p: any) =>
-                                  typeof p === "object"
-                                    ? p.pengendalian || "-"
-                                    : "-",
-                                )
-                                .join(", ")
+                              .map((p: any) =>
+                                typeof p === "object"
+                                  ? p.pengendalian || "-"
+                                  : "-",
+                              )
+                              .join(", ")
                             : r.pengendalian || "-"}
                         </td>
                         <td className="border p-2">
                           {Array.isArray(r.penyebabList)
                             ? r.penyebabList
-                                .map((p: any) =>
-                                  typeof p === "object" ? p.status || "-" : "-",
-                                )
-                                .join(", ")
+                              .map((p: any) =>
+                                typeof p === "object" ? p.status || "-" : "-",
+                              )
+                              .join(", ")
                             : r.hasil || "-"}
                         </td>
 
@@ -540,22 +468,22 @@ export default function TambahProfilRisikoPage() {
                         <td className="border p-2">
                           {Array.isArray(r.rtp)
                             ? r.rtp
-                                .map((x: any) =>
-                                  typeof x === "object"
-                                    ? x.jenisRtp || x.jenis_rtp || "-"
-                                    : "-",
-                                )
-                                .join(", ")
+                              .map((x: any) =>
+                                typeof x === "object"
+                                  ? x.jenisRtp || x.jenis_rtp || "-"
+                                  : "-",
+                              )
+                              .join(", ")
                             : "-"}
                         </td>
 
                         <td className="border p-2">
                           {Array.isArray(r.rtp)
                             ? r.rtp
-                                .map((x: any) =>
-                                  typeof x === "object" ? x.uraian || "-" : "-",
-                                )
-                                .join(", ")
+                              .map((x: any) =>
+                                typeof x === "object" ? x.uraian || "-" : "-",
+                              )
+                              .join(", ")
                             : "-"}
                         </td>
                         {/* 🔥 ALOKASI */}
@@ -583,12 +511,12 @@ export default function TambahProfilRisikoPage() {
                         <td className="border p-2">
                           {Array.isArray(r.rtp)
                             ? r.rtp
-                                .map((x: any) =>
-                                  typeof x === "object"
-                                    ? x.indikator || "-"
-                                    : "-",
-                                )
-                                .join(", ")
+                              .map((x: any) =>
+                                typeof x === "object"
+                                  ? x.indikator || "-"
+                                  : "-",
+                              )
+                              .join(", ")
                             : "-"}
                         </td>
                         <td className="border p-2 text-center">
@@ -663,46 +591,43 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Kategori Risiko</label>
                           <input
-                            value={form.kategori || kategoriRisiko}
-                            disabled
-                            className="w-full border p-2 rounded bg-gray-100"
+                            type="text"
+                            className="w-full border p-2 rounded"
+                            placeholder="Ketik kategori risiko"
+                            value={form.kategori}
+                            onChange={(e) =>
+                              setForm((prev: any) => ({
+                                ...prev,
+                                kategori: e.target.value,
+                              }))
+                            }
                           />
                         </div>
 
                         {/* NAMA KEGIATAN */}
                         <div>
                           <label className="text-sm">Nama Kegiatan</label>
-                          <select
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const selected = kegiatanList.find(
-                                (k) => k.nama === val,
-                              );
-
+                            placeholder="Ketik nama kegiatan"
+                            value={form.kegiatan}
+                            onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
-                                kegiatan: val,
-                                tujuanList: selected?.tujuanList || [],
-                              }));
-                            }}
-                          >
-                            <option value="">Pilih Kegiatan</option>
-                            {kegiatanList.map((k, i) => (
-                              <option key={i} value={k.nama}>
-                                {k.nama}
-                              </option>
-                            ))}
-                          </select>
+                                kegiatan: e.target.value,
+                              }))
+                            }
+                          />
                         </div>
 
                         {/* TUJUAN */}
                         <div>
-                          <label className="text-sm">
-                            Tujuan Kegiatan Utama
-                          </label>
-                          <select
+                          <label className="text-sm">Tujuan Kegiatan Utama</label>
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
+                            placeholder="Ketik tujuan kegiatan utama"
                             value={form.tujuan}
                             onChange={(e) =>
                               setForm((prev: any) => ({
@@ -710,178 +635,142 @@ export default function TambahProfilRisikoPage() {
                                 tujuan: e.target.value,
                               }))
                             }
-                          >
-                            <option value="">Pilih Tujuan</option>
-                            {(form.tujuanList || []).map(
-                              (t: any, i: number) => (
-                                <option key={i} value={t}>
-                                  {t}
-                                </option>
-                              ),
-                            )}
-                          </select>
+                          />
                         </div>
 
                         {/* PAKET */}
                         <div>
                           <label className="text-sm">Nama Paket</label>
-
-                          <select
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
-                            onChange={(e) => {
-                              const value = e.target.value;
-
-                              const paket = (paketList || []).find(
-                                (p: any) => String(p.id) === value,
-                              );
-
-                              setSelectedPaket(paket || null);
-
+                            placeholder="Ketik nama paket"
+                            value={form.paket}
+                            onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
-                                paket: paket?.nama || paket?.nama_paket || "",
-                                kodePaket: paket?.kode || "",
-                                kodePPK: paket?.ppk || paket?.kode_ppk || "",
-                                namaPPK:
-                                  paket?.namaPPK || paket?.nama_ppk || "",
-                                nipPPK: paket?.nip || paket?.nip_ppk || "",
-                              }));
-                            }}
-                          >
-                            <option value="">Pilih Paket</option>
-                            {(paketList || []).map((p: any) => (
-                              <option key={p.id} value={p.id}>
-                                {p.nama || p.nama_paket}
-                              </option>
-                            ))}
-                          </select>
+                                paket: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
 
-                          {/* AUTO ISI */}
-                          {selectedPaket && (
-                            <div className="border rounded p-3 bg-gray-50 text-sm space-y-1 mt-2">
-                              <div>
-                                <b>Kode Paket:</b> {selectedPaket.kode}
-                              </div>
-                              <div>
-                                <b>Kode PPK:</b>{" "}
-                                {selectedPaket.ppk || selectedPaket.kode_ppk}
-                              </div>
-                              <div>
-                                <b>Nama PPK:</b>{" "}
-                                {selectedPaket.namaPPK ||
-                                  selectedPaket.nama_ppk}
-                              </div>
-                              <div>
-                                <b>NIP:</b>{" "}
-                                {selectedPaket.nip || selectedPaket.nip_ppk}
-                              </div>
-                            </div>
-                          )}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm">Kode Paket</label>
+                            <input
+                              type="text"
+                              className="w-full border p-2 rounded"
+                              placeholder="Ketik kode paket"
+                              value={form.kodePaket}
+                              onChange={(e) =>
+                                setForm((prev: any) => ({
+                                  ...prev,
+                                  kodePaket: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm">Kode PPK</label>
+                            <input
+                              type="text"
+                              className="w-full border p-2 rounded"
+                              placeholder="Ketik kode PPK"
+                              value={form.kodePPK}
+                              onChange={(e) =>
+                                setForm((prev: any) => ({
+                                  ...prev,
+                                  kodePPK: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm">Nama PPK</label>
+                            <input
+                              type="text"
+                              className="w-full border p-2 rounded"
+                              placeholder="Ketik nama PPK"
+                              value={form.namaPPK}
+                              onChange={(e) =>
+                                setForm((prev: any) => ({
+                                  ...prev,
+                                  namaPPK: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm">NIP PPK</label>
+                            <input
+                              type="text"
+                              className="w-full border p-2 rounded"
+                              placeholder="Ketik NIP PPK"
+                              value={form.nipPPK}
+                              onChange={(e) =>
+                                setForm((prev: any) => ({
+                                  ...prev,
+                                  nipPPK: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
                         </div>
 
                         {/* TAHAPAN */}
                         <div>
                           <label className="text-sm">Tahapan Pekerjaan</label>
-                          <select
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
+                            placeholder="Ketik tahapan pekerjaan"
                             value={form.tahapan}
-                            onChange={(e) => {
-                              setSelectedReferensiId("");
-
+                            onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
                                 tahapan: e.target.value,
-                                pernyataan: "",
-                                dampak: "",
-                                dampakKategori: "",
-                              }));
-
-                              setStep2Form((prev: any) => ({
-                                ...prev,
-                                jenis: "",
-                                penyebab: "",
-                                pengendalian: "",
-                                status: "",
-                              }));
-                            }}
-                          >
-                            <option value="">Pilih Tahapan</option>
-
-                            {tahapanList.map((tahapan: any, index: number) => (
-                              <option key={index} value={tahapan}>
-                                {tahapan}
-                              </option>
-                            ))}
-                          </select>
+                              }))
+                            }
+                          />
                         </div>
 
                         {/* LED */}
                         <div>
-                          <label className="text-sm">
-                            Referensi Lost Event
-                          </label>
-                          <select
+                          <label className="text-sm">Referensi Lost Event</label>
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
+                            placeholder="Ketik referensi lost event"
+                            value={form.led}
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
                                 led: e.target.value,
                               }))
                             }
-                          >
-                            <option value="">Pilih Referensi</option>
-                            <option>Data LED 1</option>
-                            <option>Data LED 2</option>
-                          </select>
+                          />
                         </div>
 
-                        {/* PERNYATAAN RISIKO DARI DATABASE */}
+                        {/* PERNYATAAN RISIKO */}
                         <div>
                           <label className="text-sm">Pernyataan Risiko</label>
-
-                          <select
-                            className="w-full border p-2 rounded bg-white"
-                            value={selectedReferensiId}
-                            onChange={(e) => {
-                              const id = e.target.value;
-
-                              setSelectedReferensiId(id);
-
-                              const selected = referensiList.find(
-                                (item: any) => String(item.id) === String(id),
-                              );
-
+                          <textarea
+                            className="w-full border p-2 rounded"
+                            placeholder="Ketik pernyataan risiko"
+                            value={form.pernyataan}
+                            onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
-                                pernyataan: selected?.pernyataan || "",
-                                dampak: selected?.dampak || "",
-                                dampakKategori:
-                                  selected?.dampak_kategori ||
-                                  selected?.kategori_dampak ||
-                                  prev.dampakKategori,
-                              }));
-
-                              setStep2Form((prev: any) => ({
-                                ...prev,
-                                jenis:
-                                  selected?.jenis ||
-                                  selected?.jenis_penyebab ||
-                                  prev.jenis,
-                                penyebab: selected?.penyebab || "",
-                                pengendalian: selected?.pengendalian || "",
-                                status: selected?.status || "",
-                              }));
-                            }}
-                          >
-                            <option value="">Pilih Pernyataan Risiko</option>
-
-                            {pernyataanList.map((item: any) => (
-                              <option key={item.id} value={item.id}>
-                                {item.kode ? `${item.kode} | ` : ""}
-                                {item.pernyataan}
-                              </option>
-                            ))}
-                          </select>
+                                pernyataan: e.target.value,
+                              }))
+                            }
+                          />
                         </div>
 
                         {/* PJ */}
@@ -889,6 +778,8 @@ export default function TambahProfilRisikoPage() {
                           <label className="text-sm">Penanggung Jawab</label>
                           <textarea
                             className="w-full border p-2 rounded"
+                            placeholder="Ketik penanggung jawab"
+                            value={form.penanggungJawab}
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -901,28 +792,26 @@ export default function TambahProfilRisikoPage() {
                         {/* KATEGORI DAMPAK */}
                         <div>
                           <label className="text-sm">Kategori Dampak</label>
-                          <select
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
-                            value={form.dampakKategori} // ✅ TAMBAH INI
+                            placeholder="Ketik kategori dampak"
+                            value={form.dampakKategori}
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
                                 dampakKategori: e.target.value,
                               }))
                             }
-                          >
-                            <option value="">Pilih Kategori Dampak</option>
-                            <option value="Lainnya">Lainnya</option>
-                          </select>
+                          />
                         </div>
 
-                        {/* URAIAN DAMPAK DARI DATABASE */}
+                        {/* URAIAN DAMPAK */}
                         <div>
                           <label className="text-sm">Uraian Dampak</label>
-
-                          <select
-                            id="dampak"
-                            className="w-full border p-2 rounded bg-white"
+                          <textarea
+                            className="w-full border p-2 rounded"
+                            placeholder="Ketik uraian dampak"
                             value={form.dampak}
                             onChange={(e) =>
                               setForm((prev: any) => ({
@@ -930,15 +819,7 @@ export default function TambahProfilRisikoPage() {
                                 dampak: e.target.value,
                               }))
                             }
-                          >
-                            <option value="">Pilih Uraian Dampak</option>
-
-                            {selectedReferensi?.dampak && (
-                              <option value={selectedReferensi.dampak}>
-                                {selectedReferensi.dampak}
-                              </option>
-                            )}
-                          </select>
+                          />
                         </div>
 
                         {/* BUTTON */}
@@ -1007,340 +888,319 @@ export default function TambahProfilRisikoPage() {
                         {/* ========================= */}
 
                         <div>
-                          <label className="text-sm">Jenis Penyebab</label>
-                          <select
-                            className="w-full border p-2 rounded"
-                            value={step2Form.jenis}
-                            onChange={(e) =>
-                              setStep2Form((prev) => ({
-                                ...prev,
-                                jenis: e.target.value,
-                              }))
-                            }
-                          >
-                            <option value="">Pilih</option>
-                            <option>Tekanan / Pressure</option>
-                            <option>Kesempatan / Opportunity</option>
-                            <option>Rasionalisasi</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="text-sm">Penyebab Risiko</label>
-                          <textarea
-                            className="w-full border p-2 rounded"
-                            value={step2Form.penyebab}
-                            onChange={(e) =>
-                              setStep2Form((prev) => ({
-                                ...prev,
-                                penyebab: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-sm">Uraian Pengendalian</label>
-                          <textarea
-                            className="w-full border p-2 rounded"
-                            value={step2Form.pengendalian}
-                            onChange={(e) =>
-                              setStep2Form((prev) => ({
-                                ...prev,
-                                pengendalian: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-sm">Status</label>
-                          <select
-                            className="w-full border p-2 rounded"
-                            value={step2Form.status}
-                            onChange={(e) =>
-                              setStep2Form((prev) => ({
-                                ...prev,
-                                status: e.target.value,
-                              }))
-                            }
-                          >
-                            <option value="">Pilih</option>
-                            <option>Memadai</option>
-                            <option>Belum Memadai</option>
-                          </select>
-                        </div>
-
-                        {/* BUTTON TAMBAH PENYEBAB */}
-                        <div className="flex justify-end">
-                          <button
-                            onClick={() => {
-                              if (!step2Form.penyebab) return;
-
-                              const newItem = {
-                                id: Date.now(),
-                                kode: "P-" + Math.floor(Math.random() * 1000),
-
-                                jenis: step2Form.jenis,
-                                penyebab: step2Form.penyebab,
-                                pengendalian: step2Form.pengendalian,
-                                status: step2Form.status,
-                              };
-
-                              setPenyebabList((prev) => [...prev, newItem]);
-
-                              setStep2Form({
-                                jenis: "",
-                                penyebab: "",
-                                pengendalian: "",
-                                status: "",
-                                kemungkinan: 1,
-                                dampak: 1,
-                                skor: 1,
-                              });
-                            }}
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2"
-                          >
-                            Tambah +
-                          </button>
-                        </div>
-
-                        {/* TABLE PENYEBAB */}
-                        <table className="w-full text-xs border mt-3">
-                          <thead className="bg-purple-800 text-white">
-                            <tr>
-                              <th className="p-2 border">No</th>
-                              <th className="p-2 border">Jenis</th>
-                              <th className="p-2 border">Penyebab</th>
-                              <th className="p-2 border">Pengendalian</th>
-                              <th className="p-2 border">Status</th>
-                              <th className="p-2 border">Action</th>
-                            </tr>
-                          </thead>
-
-                          <tbody>
-                            {penyebabList.length === 0 ? (
-                              <tr>
-                                <td
-                                  colSpan={6}
-                                  className="text-center p-3 text-gray-400"
-                                >
-                                  Belum ada data
-                                </td>
-                              </tr>
-                            ) : (
-                              penyebabList.map((p, i) => (
-                                <tr key={p.id}>
-                                  <td className="border p-2">{p.kode}</td>
-                                  <td className="border p-2">{p.jenis}</td>
-                                  <td className="border p-2">{p.penyebab}</td>
-                                  <td className="border p-2">
-                                    {p.pengendalian}
-                                  </td>
-                                  <td className="border p-2">{p.status}</td>
-                                  <td className="border p-2 text-center">
-                                    <button
-                                      onClick={() =>
-                                        setPenyebabList((prev) =>
-                                          prev.filter((x) => x.id !== p.id),
-                                        )
-                                      }
-                                      className="bg-red-500 text-white px-2 py-1 rounded text-xs"
-                                    >
-                                      Hapus
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))
-                            )}
-                          </tbody>
-                        </table>
-
-                        {/* ========================= */}
-                        {/* 🟢 BLOK C: SKOR */}
-                        {/* ========================= */}
-
-                        <div className="mt-5 border-t pt-4">
-                          <h4 className="text-sm font-bold mb-3 text-blue-700">
-                            Skor Risiko Setelah Pengendalian
-                          </h4>
-
-                          {/* K & D */}
-                          <div className="grid grid-cols-2 gap-3">
-                            {/* KEMUNGKINAN */}
-                            <div>
-                              <label className="text-xs">
-                                Tingkat Kemungkinan
-                              </label>
-                              <select
-                                value={step2Form.kemungkinan}
-                                onChange={(e) =>
-                                  setStep2Form((prev) => ({
-                                    ...prev,
-                                    kemungkinan: Number(e.target.value),
-                                  }))
-                                }
-                                className="w-full border p-2 rounded"
-                              >
-                                <option value={1}>
-                                  1 - Hampir Tidak Terjadi
-                                </option>
-                                <option value={2}>2 - Jarang Terjadi</option>
-                                <option value={3}>3 - Kadang Terjadi</option>
-                                <option value={4}>4 - Sering Terjadi</option>
-                                <option value={5}>
-                                  5 - Hampir Pasti Terjadi
-                                </option>
-                              </select>
-                            </div>
-
-                            {/* DAMPAK */}
-                            <div>
-                              <label className="text-xs">Tingkat Dampak</label>
-                              <select
-                                value={step2Form.dampak}
-                                onChange={(e) =>
-                                  setStep2Form((prev) => ({
-                                    ...prev,
-                                    dampak: Number(e.target.value),
-                                  }))
-                                }
-                                className="w-full border p-2 rounded"
-                              >
-                                <option value={1}>1 - Tidak Signifikan</option>
-                                <option value={2}>2 - Minor</option>
-                                <option value={3}>3 - Moderat</option>
-                                <option value={4}>4 - Signifikan</option>
-                                <option value={5}>5 - Sangat Signifikan</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          {/* PENJELASAN */}
-                          <div className="grid grid-cols-2 gap-3 mt-3">
-                            <textarea
-                              placeholder="Penjelasan Tingkat Kemungkinan"
-                              className="border p-2 rounded"
-                            />
-
-                            <textarea
-                              placeholder="Penjelasan Tingkat Dampak"
-                              className="border p-2 rounded"
-                            />
-                          </div>
-
-                          {/* SKOR */}
-                          <div className="mt-3">
-                            <label className="text-xs">
-                              Skor Risiko (K x D)
-                            </label>
-
+                          <div>
+                            <label className="text-sm">Jenis Penyebab</label>
                             <input
-                              value={step2Form.skor}
-                              readOnly
-                              className={`w-full border p-2 rounded text-center font-bold ${
-                                step2Form.skor >= 20
+                              type="text"
+                              className="w-full border p-2 rounded"
+                              placeholder="Ketik jenis penyebab"
+                              value={step2Form.jenis}
+                              onChange={(e) =>
+                                setStep2Form((prev) => ({
+                                  ...prev,
+                                  jenis: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm">Penyebab Risiko</label>
+                            <textarea
+                              className="w-full border p-2 rounded"
+                              placeholder="Ketik penyebab risiko"
+                              value={step2Form.penyebab}
+                              onChange={(e) =>
+                                setStep2Form((prev) => ({
+                                  ...prev,
+                                  penyebab: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm">Uraian Pengendalian</label>
+                            <textarea
+                              className="w-full border p-2 rounded"
+                              value={step2Form.pengendalian}
+                              onChange={(e) =>
+                                setStep2Form((prev) => ({
+                                  ...prev,
+                                  pengendalian: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <div>
+                              <label className="text-sm">Status</label>
+                              <input
+                                type="text"
+                                className="w-full border p-2 rounded"
+                                placeholder="Ketik status pengendalian"
+                                value={step2Form.status}
+                                onChange={(e) =>
+                                  setStep2Form((prev) => ({
+                                    ...prev,
+                                    status: e.target.value,
+                                  }))
+                                }
+                              />
+                            </div>
+
+                            {/* BUTTON TAMBAH PENYEBAB */}
+                            <div className="flex justify-end">
+                              <button
+                                onClick={() => {
+                                  if (!step2Form.penyebab) return;
+
+                                  const newItem = {
+                                    id: Date.now(),
+                                    kode: "P-" + Math.floor(Math.random() * 1000),
+
+                                    jenis: step2Form.jenis,
+                                    penyebab: step2Form.penyebab,
+                                    pengendalian: step2Form.pengendalian,
+                                    status: step2Form.status,
+                                  };
+
+                                  setPenyebabList((prev) => [...prev, newItem]);
+
+                                  setStep2Form({
+                                    jenis: "",
+                                    penyebab: "",
+                                    pengendalian: "",
+                                    status: "",
+                                    kemungkinan: 1,
+                                    dampak: 1,
+                                    skor: 1,
+                                  });
+                                }}
+                                className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2"
+                              >
+                                Tambah +
+                              </button>
+                            </div>
+
+                            {/* TABLE PENYEBAB */}
+                            <table className="w-full text-xs border mt-3">
+                              <thead className="bg-purple-800 text-white">
+                                <tr>
+                                  <th className="p-2 border">No</th>
+                                  <th className="p-2 border">Jenis</th>
+                                  <th className="p-2 border">Penyebab</th>
+                                  <th className="p-2 border">Pengendalian</th>
+                                  <th className="p-2 border">Status</th>
+                                  <th className="p-2 border">Action</th>
+                                </tr>
+                              </thead>
+
+                              <tbody>
+                                {penyebabList.length === 0 ? (
+                                  <tr>
+                                    <td
+                                      colSpan={6}
+                                      className="text-center p-3 text-gray-400"
+                                    >
+                                      Belum ada data
+                                    </td>
+                                  </tr>
+                                ) : (
+                                  penyebabList.map((p, i) => (
+                                    <tr key={p.id}>
+                                      <td className="border p-2">{p.kode}</td>
+                                      <td className="border p-2">{p.jenis}</td>
+                                      <td className="border p-2">{p.penyebab}</td>
+                                      <td className="border p-2">
+                                        {p.pengendalian}
+                                      </td>
+                                      <td className="border p-2">{p.status}</td>
+                                      <td className="border p-2 text-center">
+                                        <button
+                                          onClick={() =>
+                                            setPenyebabList((prev) =>
+                                              prev.filter((x) => x.id !== p.id),
+                                            )
+                                          }
+                                          className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                                        >
+                                          Hapus
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+                            </table>
+
+                            {/* ========================= */}
+                            {/* 🟢 BLOK C: SKOR */}
+                            {/* ========================= */}
+
+                            <div className="mt-5 border-t pt-4">
+                              <h4 className="text-sm font-bold mb-3 text-blue-700">
+                                Skor Risiko Setelah Pengendalian
+                              </h4>
+
+                              {/* K & D */}
+                              <div className="grid grid-cols-2 gap-3">
+                                {/* KEMUNGKINAN */}
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={5}
+                                  value={step2Form.kemungkinan}
+                                  onChange={(e) =>
+                                    setStep2Form((prev) => ({
+                                      ...prev,
+                                      kemungkinan: Number(e.target.value),
+                                    }))
+                                  }
+                                  className="w-full border p-2 rounded"
+                                />
+
+                                {/* DAMPAK */}
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={5}
+                                  value={step2Form.dampak}
+                                  onChange={(e) =>
+                                    setStep2Form((prev) => ({
+                                      ...prev,
+                                      dampak: Number(e.target.value),
+                                    }))
+                                  }
+                                  className="w-full border p-2 rounded"
+                                />
+                              </div>
+                            </div>
+
+                            {/* PENJELASAN */}
+                            <div className="grid grid-cols-2 gap-3 mt-3">
+                              <textarea
+                                placeholder="Penjelasan Tingkat Kemungkinan"
+                                className="border p-2 rounded"
+                              />
+
+                              <textarea
+                                placeholder="Penjelasan Tingkat Dampak"
+                                className="border p-2 rounded"
+                              />
+                            </div>
+
+                            {/* SKOR */}
+                            <div className="mt-3">
+                              <label className="text-xs">
+                                Skor Risiko (K x D)
+                              </label>
+
+                              <input
+                                value={step2Form.skor}
+                                readOnly
+                                className={`w-full border p-2 rounded text-center font-bold ${step2Form.skor >= 20
                                   ? "bg-red-500 text-white"
                                   : step2Form.skor >= 16
                                     ? "bg-orange-400 text-black"
                                     : step2Form.skor >= 11
                                       ? "bg-yellow-400 text-black"
                                       : "bg-green-400 text-black"
-                              }`}
-                            />
+                                  }`}
+                              />
+                            </div>
                           </div>
-                        </div>
 
-                        {/* ========================= */}
-                        {/* 🚀 FINAL */}
-                        {/* ========================= */}
+                          {/* ========================= */}
+                          {/* 🚀 FINAL */}
+                          {/* ========================= */}
 
-                        <div className="flex justify-end mt-4">
-                          <button
-                            onClick={async () => {
-                              setRisikoList((prev) => {
-                                const updated = [...prev];
-                                const lastIndex = updated.length - 1;
+                          <div className="flex justify-end mt-4">
+                            <button
+                              onClick={async () => {
+                                setRisikoList((prev) => {
+                                  const updated = [...prev];
+                                  const lastIndex = updated.length - 1;
 
-                                if (lastIndex >= 0) {
-                                  updated[lastIndex] = {
-                                    ...updated[lastIndex],
-                                    // STEP 2
-                                    penyebabList,
+                                  if (lastIndex >= 0) {
+                                    updated[lastIndex] = {
+                                      ...updated[lastIndex],
+                                      // STEP 2
+                                      penyebabList,
 
-                                    // STEP 4
-                                    rtp: rtpList,
+                                      // STEP 4
+                                      rtp: rtpList,
 
-                                    // RTP SCORE
-                                    rtp_k: rtpScore.k,
-                                    rtp_d: rtpScore.d,
-                                    rtp_n: rtpScore.n,
-                                    sumber: rtpScore.sumber,
-                                    penyebab: penyebabList
-                                      .map((p) => p.penyebab)
-                                      .join(", "),
-                                    pengendalian: penyebabList
-                                      .map((p) => p.pengendalian)
-                                      .join(", "),
-                                    hasil: penyebabList
-                                      .map((p) => p.status)
-                                      .join(", "),
+                                      // RTP SCORE
+                                      rtp_k: rtpScore.k,
+                                      rtp_d: rtpScore.d,
+                                      rtp_n: rtpScore.n,
+                                      sumber: rtpScore.sumber,
+                                      penyebab: penyebabList
+                                        .map((p) => p.penyebab)
+                                        .join(", "),
+                                      pengendalian: penyebabList
+                                        .map((p) => p.pengendalian)
+                                        .join(", "),
+                                      hasil: penyebabList
+                                        .map((p) => p.status)
+                                        .join(", "),
 
-                                    k: step2Form.kemungkinan,
-                                    d: step2Form.dampak,
-                                    skor: step2Form.skor,
+                                      k: step2Form.kemungkinan,
+                                      d: step2Form.dampak,
+                                      skor: step2Form.skor,
 
-                                    prioritas:
-                                      step2Form.skor >= 20
-                                        ? 1
-                                        : step2Form.skor >= 15
-                                          ? 2
-                                          : step2Form.skor >= 10
-                                            ? 3
-                                            : 4,
-                                  };
-                                }
+                                      prioritas:
+                                        step2Form.skor >= 20
+                                          ? 1
+                                          : step2Form.skor >= 15
+                                            ? 2
+                                            : step2Form.skor >= 10
+                                              ? 3
+                                              : 4,
+                                    };
+                                  }
 
-                                return updated;
-                              });
+                                  return updated;
+                                });
 
-                              setStep(3);
-                            }}
-                            className="bg-blue-700 text-white px-4 py-2 rounded"
-                          >
-                            Selanjutnya
-                          </button>
+                                setStep(3);
+                              }}
+                              className="bg-blue-700 text-white px-4 py-2 rounded"
+                            >
+                              Selanjutnya
+                            </button>
+                          </div>
                         </div>
                       </>
                     )}
                     {step === 3 && (
                       <>
                         <div className="bg-blue-50 p-3 text-xs border rounded">
-                          Step 3: Pilih respon risiko
+                          Step 3: Isi respon risiko
                         </div>
 
                         <div>
                           <label className="text-sm">Respon Risiko</label>
-                          <select
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
+                            placeholder="Ketik respon risiko"
                             value={step3Form.respon}
                             onChange={(e) =>
-                              setStep3Form({ respon: e.target.value })
+                              setStep3Form({
+                                respon: e.target.value,
+                              })
                             }
-                          >
-                            <option value="">Pilih</option>
-                            <option value="Menerima">Menerima</option>
-                            <option value="Mengurangi">Mengurangi</option>
-                            <option value="Menghindari">Menghindari</option>
-                            <option value="Mentransfer">Mentransfer</option>
-                          </select>
+                          />
                         </div>
 
                         <div className="flex justify-end mt-3">
                           <button
-                            onClick={async () => {
+                            onClick={() => {
                               if (!step3Form.respon) {
-                                alert("Respon belum dipilih!");
+                                alert("Respon belum diisi!");
                                 return;
                               }
 
@@ -1376,33 +1236,27 @@ export default function TambahProfilRisikoPage() {
 
                         {/* PILIH PENYEBAB */}
                         <div>
-                          <label className="text-sm">
-                            Pilih Penyebab Risiko
-                          </label>
-                          <select
+                          <label className="text-sm">Penyebab Risiko</label>
+                          <textarea
                             className="w-full border p-2 rounded"
-                            value={step4Form.penyebabId}
+                            placeholder="Ketik penyebab risiko untuk RTP"
+                            value={step4Form.penyebab}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
                                 ...prev,
-                                penyebabId: e.target.value,
+                                penyebab: e.target.value,
                               }))
                             }
-                          >
-                            <option value="">Pilih</option>
-                            {penyebabList.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.kode} - {p.penyebab}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </div>
 
                         {/* RESPON */}
                         <div>
                           <label className="text-sm">Respon Risiko</label>
-                          <select
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
+                            placeholder="Ketik respon risiko"
                             value={step4Form.respon}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1410,11 +1264,7 @@ export default function TambahProfilRisikoPage() {
                                 respon: e.target.value,
                               }))
                             }
-                          >
-                            <option value="">Pilih</option>
-                            <option>Mengurangi Dampak</option>
-                            <option>Mengurangi Frekuensi</option>
-                          </select>
+                          />
                         </div>
 
                         {/* BERBAGI */}
@@ -1480,8 +1330,10 @@ export default function TambahProfilRisikoPage() {
                         {/* PERIODE */}
                         <div>
                           <label className="text-sm">Periode</label>
-                          <select
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
+                            placeholder="Ketik periode, contoh: SEMESTER / TAHUNAN"
                             value={step4Form.periode}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1489,31 +1341,21 @@ export default function TambahProfilRisikoPage() {
                                 periode: e.target.value,
                               }))
                             }
-                          >
-                            <option>SEMESTER</option>
-                            <option>TAHUNAN</option>
-                          </select>
+                          />
                         </div>
 
                         {/* BUTTON TAMBAH */}
                         <div className="flex justify-end">
                           <button
                             onClick={() => {
-                              console.log(penyebabList);
-
-                              if (penyebabList.length === 0) {
-                                alert("Penyebab belum dipilih!");
+                              if (!step4Form.penyebab) {
+                                alert("Penyebab belum diisi!");
                                 return;
                               }
 
-                              const penyebab = penyebabList.find(
-                                (p) => p.id == step4Form.penyebabId,
-                              );
-
                               const newItem = {
                                 id: Date.now(),
-                                kode: penyebab?.kode,
-                                penyebab: penyebab?.penyebab,
+                                kode: "P-" + Math.floor(Math.random() * 1000),
                                 penanggungJawab: form.penanggungJawab,
                                 targetList: [],
                                 ...step4Form,
@@ -1523,12 +1365,13 @@ export default function TambahProfilRisikoPage() {
 
                               setStep4Form({
                                 penyebabId: "",
+                                penyebab: "",
                                 respon: "",
                                 berbagi: "",
                                 jenisRtp: "",
                                 uraian: "",
                                 indikator: "",
-                                periode: "SEMESTER",
+                                periode: "",
                               });
                             }}
                             className="bg-blue-600 text-white px-3 py-1 rounded"
@@ -1688,8 +1531,11 @@ export default function TambahProfilRisikoPage() {
                               />
                             </div>
                             {/* KEMUNGKINAN */}
-                            <select
-                              className="border p-2 rounded"
+                            <input
+                              type="number"
+                              min={1}
+                              max={5}
+                              className="w-full border p-2 rounded"
                               value={rtpScore.k}
                               onChange={(e) =>
                                 setRtpScore((prev) => ({
@@ -1697,19 +1543,14 @@ export default function TambahProfilRisikoPage() {
                                   k: Number(e.target.value),
                                 }))
                               }
-                            >
-                              <option value={1}>
-                                1 - Hampir Tidak Terjadi
-                              </option>
-                              <option value={2}>2 - Jarang Terjadi</option>
-                              <option value={3}>3 - Kadang Terjadi</option>
-                              <option value={4}>4 - Sering Terjadi</option>
-                              <option value={5}>5 - Hampir Pasti</option>
-                            </select>
+                            />
 
                             {/* DAMPAK */}
-                            <select
-                              className="border p-2 rounded"
+                            <input
+                              type="number"
+                              min={1}
+                              max={5}
+                              className="w-full border p-2 rounded"
                               value={rtpScore.d}
                               onChange={(e) =>
                                 setRtpScore((prev) => ({
@@ -1717,28 +1558,21 @@ export default function TambahProfilRisikoPage() {
                                   d: Number(e.target.value),
                                 }))
                               }
-                            >
-                              <option value={1}>1 - Tidak Signifikan</option>
-                              <option value={2}>2 - Minor</option>
-                              <option value={3}>3 - Moderat</option>
-                              <option value={4}>4 - Signifikan</option>
-                              <option value={5}>5 - Sangat Signifikan</option>
-                            </select>
+                            />
                           </div>
 
                           {/* NILAI */}
                           <input
                             value={rtpScore.n}
                             readOnly
-                            className={`w-full mt-3 p-2 text-center font-bold rounded ${
-                              rtpScore.n >= 20
-                                ? "bg-red-500 text-white"
-                                : rtpScore.n >= 16
-                                  ? "bg-orange-400"
-                                  : rtpScore.n >= 11
-                                    ? "bg-yellow-400"
-                                    : "bg-green-400"
-                            }`}
+                            className={`w-full mt-3 p-2 text-center font-bold rounded ${rtpScore.n >= 20
+                              ? "bg-red-500 text-white"
+                              : rtpScore.n >= 16
+                                ? "bg-orange-400"
+                                : rtpScore.n >= 11
+                                  ? "bg-yellow-400"
+                                  : "bg-green-400"
+                              }`}
                           />
                         </div>
 
@@ -1816,15 +1650,13 @@ export default function TambahProfilRisikoPage() {
                         <div className="mt-6">
                           <label className="text-sm">Klasifikasi</label>
 
-                          <select
+                          <input
+                            type="text"
                             className="w-full border p-2 rounded"
+                            placeholder="Ketik klasifikasi"
                             value={klasifikasi}
                             onChange={(e) => setKlasifikasi(e.target.value)}
-                          >
-                            <option value="">Pilih</option>
-                            <option>Risiko Organisasi</option>
-                            <option>Risiko Strategis</option>
-                          </select>
+                          />
                         </div>
                         {openTargetModal && (
                           <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
@@ -1920,7 +1752,7 @@ export default function TambahProfilRisikoPage() {
 
                                 kode: form.kode || `KR-${Date.now()}`,
 
-                                kategori: form.kategori || "Umum",
+                                kategori: form.kategori || "-",
 
                                 kegiatan: form.kegiatan || "-",
 
@@ -2028,5 +1860,7 @@ export default function TambahProfilRisikoPage() {
         </div>
       </div>
     </div>
+
+
   );
 }

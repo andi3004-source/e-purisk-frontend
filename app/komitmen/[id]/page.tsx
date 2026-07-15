@@ -9,109 +9,185 @@ import Navbar from "@/components/Navbar";
 export default function DetailKomitmenPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id;
+  const id = String(params.id || "");
 
   const [dataSasaran, setDataSasaran] = useState<any[]>([]);
   const fetchKomitmen = async () => {
-  try {
+    try {
+      const res = await axios.get(
+        `http://127.0.0.1:8000/api/komitmen/${id}`
+      );
 
-    const res = await axios.get(
-      `http://127.0.0.1:8000/api/komitmen/${id}`
-    );
+      const data = res.data;
 
-    setKomitmen(res.data);
+      setKomitmen(data);
 
-    setPakta(res.data.pakta || "");
-    setTujuan(res.data.tujuan || "");
+      setPakta(data.pakta || "");
+      setTujuan(data.tujuan || "");
 
-    setDataSasaran(res.data.sasaran || []);
+      let rawSasaran = safeJson(data.sasaran);
 
-    setInternal(res.data.internal || []);
+      if (rawSasaran.length === 0) {
+        rawSasaran = safeJson(data.sasaranList);
+      }
 
-    setEksternal(res.data.eksternal || []);
+      if (rawSasaran.length === 0) {
+        rawSasaran = safeJson(data.sasarans);
+      }
 
-  } catch (err) {
-    console.log(err);
-  }
-};
+      const mappedSasaran = rawSasaran.map((s: any) => ({
+        id: s.id,
+
+        sasaranStrategis:
+          s.sasaranStrategis || s.sasaran_strategis || "",
+
+        indikatorStrategis:
+          s.indikatorStrategis || s.indikator_strategis || "",
+
+        sasaranProgram:
+          s.sasaranProgram || s.sasaran_program || "",
+
+        indikatorProgram:
+          s.indikatorProgram || s.indikator_program || "",
+
+        sasaranKegiatan:
+          s.sasaranKegiatan || s.sasaran_kegiatan || "",
+
+        indikatorKegiatan:
+          s.indikatorKegiatan || s.indikator_kegiatan || "",
+
+        indikator:
+          Array.isArray(s.indikator)
+            ? s.indikator
+            : [
+              {
+                nama: s.indikator_kegiatan || s.indikatorKegiatan || "-",
+                sub: [
+                  {
+                    nama: s.sub_indikator || s.subIndikator || "-",
+                    kegiatan: [],
+                  },
+                ],
+              },
+            ],
+      }));
+
+      setDataSasaran(mappedSasaran);
+
+      setInternal(safeJson(data.internal));
+      setEksternal(safeJson(data.eksternal));
+
+      const jadwalData = safeJson(data.jadwalMR || data.jadwal_mr || data.jadwal);
+
+      if (jadwalData.length > 0) {
+        setJadwal(jadwalData);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   // 🔥 TAMBAHAN
   const [pakta, setPakta] = useState("");
   const [tujuan, setTujuan] = useState("");
   const [internal, setInternal] = useState<any[]>([]);
   const [eksternal, setEksternal] = useState<any[]>([]);
+  const [jadwal, setJadwal] = useState<any[]>([]);
+
+  const safeJson = (value: any) => {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
 
 
   const savePakta = async () => {
-  try {
-    await axios.put(
-      `http://127.0.0.1:8000/api/komitmen/${id}`,
-      {
-        pakta,
-      }
-    );
-  } catch (error) {
-    console.log(error);
-  }
-};
+    try {
+
+      console.log("Kirim pakta:", pakta);
+
+      const res = await axios.put(
+        `http://127.0.0.1:8000/api/komitmen/${id}`,
+        {
+          pakta: pakta,
+        }
+      );
+
+      console.log(res.data);
+
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const saveTujuan = async () => {
-  try {
-    await axios.put(
-      `http://127.0.0.1:8000/api/komitmen/${id}`,
-      {
-        tujuan,
-      }
-    );
-  } catch (error) {
-    console.log(error);
-  }
-};
-  const saveToProfil = () => {
-    const profil = {
-      id: Number(id),
-      // 🔥 TAMBAHAN INI
-      pemilik: komitmen?.pemilik,
-      nip_pemilik: komitmen?.nip_pemilik,
-      jabatan_pemilik: komitmen?.jabatan_pemilik,
+    try {
+      await axios.put(
+        `http://127.0.0.1:8000/api/komitmen/${id}`,
+        {
+          tujuan,
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-      pengelola: komitmen?.pengelola,
-      nip_pengelola: komitmen?.nip_pengelola,
-      jabatan_pengelola: komitmen?.jabatan_pengelola,
-      pakta,
-      tujuan,
-      internal,
-      eksternal,
-      sasaran: dataSasaran,
-      jadwal,
-    };
+  const saveToProfil = async () => {
+    try {
+      const payload = {
+        pakta: pakta || "",
+        tujuan: tujuan || "",
+        internal: JSON.stringify(internal || []),
+        eksternal: JSON.stringify(eksternal || []),
+        jadwalMR: JSON.stringify(jadwal || []),
+        sasaran: JSON.stringify(dataSasaran || []),
+      };
 
-    localStorage.setItem(
-      "komitmen-detail-" + Number(id),
-      JSON.stringify(profil),
-    );
+      console.log("KIRIM KE BACKEND:", payload);
 
-    alert("Data berhasil masuk ke Profil Risiko!");
+      const res = await axios.put(
+        `http://127.0.0.1:8000/api/komitmen/${id}`,
+        payload
+      );
+
+      console.log("RESPON BACKEND:", res.data);
+
+      await fetchKomitmen();
+
+      alert("Semua data berhasil disimpan ke database!");
+    } catch (error: any) {
+      console.error("GAGAL SIMPAN:", error);
+      alert(JSON.stringify(error.response?.data || error.message, null, 2));
+    }
   };
 
   function addInternal() {
     const nama = prompt("Nama Internal");
     const ket = prompt("Keterangan");
+
     if (!nama) return;
 
     const newData = [...internal, { nama, ket }];
     setInternal(newData);
-    localStorage.setItem("internal-" + id, JSON.stringify(newData));
   }
 
   const addEksternal = () => {
     const nama = prompt("Nama Eksternal");
     const ket = prompt("Keterangan");
+
     if (!nama) return;
 
     const newData = [...eksternal, { nama, ket }];
     setEksternal(newData);
-    localStorage.setItem("eksternal-" + id, JSON.stringify(newData));
   };
+
   const bulanList = [
     "Jan",
     "Feb",
@@ -129,26 +205,16 @@ export default function DetailKomitmenPage() {
 
   const minggu = [1, 2, 3, 4];
 
-  const [jadwal, setJadwal] = useState<any[]>([
-    {
-      tahap: "Identifikasi Risiko",
-      data: Array(48).fill(0),
-    },
-    {
-      tahap: "Analisis Risiko",
-      data: Array(48).fill(0),
-    },
-  ]);
 
   const toggleCell = (rowIndex: number, colIndex: number) => {
     const newData = [...jadwal];
+
     newData[rowIndex].data[colIndex] =
       newData[rowIndex].data[colIndex] === 1 ? 0 : 1;
 
     setJadwal(newData);
-
-    localStorage.setItem("jadwal-" + id, JSON.stringify(newData));
   };
+
   const [showModal, setShowModal] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState({
     i: 0,
@@ -161,8 +227,8 @@ export default function DetailKomitmenPage() {
   const [komitmen, setKomitmen] = useState<any>(null);
 
   useEffect(() => {
-  fetchKomitmen();
-}, [id]);
+    fetchKomitmen();
+  }, [id]);
 
 
   return (
@@ -201,7 +267,7 @@ export default function DetailKomitmenPage() {
 
                   const target =
                     newData[selectedIndex.i].indikator[selectedIndex.ind].sub[
-                      selectedIndex.sub
+                    selectedIndex.sub
                     ];
 
                   if (!target.kegiatan) target.kegiatan = [];
@@ -314,7 +380,9 @@ export default function DetailKomitmenPage() {
             </button>
             {/* ================= 1 PAKTA ================= */}
             <div className="bg-white p-4 rounded-xl shadow">
-              <h2 className="font-bold mb-2">1. Pakta Manajemen Risiko</h2>
+              <h2 className="font-bold mb-2">
+                1. Pakta Manajemen Risiko
+              </h2>
 
               <textarea
                 value={pakta}
@@ -770,57 +838,7 @@ export default function DetailKomitmenPage() {
             {/* ========================= */}
             {/* 5 .JADWAL KEGIATAN */}
             {/* ========================= */}
-            <div className="bg-white p-4 rounded-xl shadow overflow-auto">
-              <h2 className="font-bold mb-3">5. Jadwal Pelaksanaan Kegiatan</h2>
-
-              <table className="text-xs border min-w-[1200px]">
-                <thead>
-                  <tr className="bg-blue-900 text-white">
-                    <th rowSpan={2} className="p-2">
-                      No
-                    </th>
-                    <th rowSpan={2} className="p-2">
-                      Tahap
-                    </th>
-
-                    {bulanList.map((b, i) => (
-                      <th key={i} colSpan={4} className="p-2 border">
-                        {b}
-                      </th>
-                    ))}
-                  </tr>
-
-                  <tr className="bg-blue-700 text-white">
-                    {bulanList.map((_, i) =>
-                      minggu.map((m, j) => (
-                        <th key={i + "-" + j} className="p-1 border">
-                          {m}
-                        </th>
-                      )),
-                    )}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {jadwal.map((item, rowIndex) => (
-                    <tr key={rowIndex}>
-                      <td className="border p-1 text-center">{rowIndex + 1}</td>
-
-                      <td className="border p-1">{item.tahap}</td>
-
-                      {item.data.map((val: number, colIndex: number) => (
-                        <td
-                          key={colIndex}
-                          onClick={() => toggleCell(rowIndex, colIndex)}
-                          className={`border w-5 h-5 cursor-pointer ${
-                            val ? "bg-green-600" : "bg-gray-200"
-                          }`}
-                        ></td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+           
               <div className="mt-4">
                 <button
                   onClick={saveToProfil}
@@ -832,7 +850,11 @@ export default function DetailKomitmenPage() {
             </div>
           </div>
         </div>
-      </div>
+     
     </>
   );
 }
+function setJadwal(newData: any[]) {
+  throw new Error("Function not implemented.");
+}
+

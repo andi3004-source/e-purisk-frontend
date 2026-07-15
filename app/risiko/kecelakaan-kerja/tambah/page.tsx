@@ -76,13 +76,13 @@ export default function TambahProfilRisikoPage() {
     periode: "SEMESTER",
   });
   const [rtpScore, setRtpScore] = useState({
-    k: 1,
-    d: 1,
-    n: 1,
-    sumber: "",
-    ketK: "",
-    ketD: "",
-  });
+  k: 1,
+  d: 1,
+  n: 1,
+  sumber: [] as string[],
+  ketK: "",
+  ketD: "",
+});
 
   const [unitForm, setUnitForm] = useState("");
   const [unitList, setUnitList] = useState<any[]>([]);
@@ -306,7 +306,7 @@ export default function TambahProfilRisikoPage() {
           </div>
 
           {/* HEADER */}
-          <div className="bg-white p-4 rounded-xl shadow">
+          <div className="bg-white text-black p-4 rounded-xl shadow">
             <div className="text-sm space-y-2">
               <div>
                 <b>Unit Organisasi :</b> {header.unit}
@@ -325,7 +325,7 @@ export default function TambahProfilRisikoPage() {
 
           {/* PEMILIK */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-xl shadow text-sm">
+            <div className="bg-white text-black p-4 rounded-xl shadow text-sm">
               <p>
                 <b>Nama Pemilik Risiko :</b> {header.namaPemilik}
               </p>
@@ -337,7 +337,7 @@ export default function TambahProfilRisikoPage() {
               </p>
             </div>
 
-            <div className="bg-white p-4 rounded-xl shadow text-sm">
+            <div className="bg-white text-black p-4 rounded-xl shadow text-sm">
               <p>
                 <b>Nama Pengelola Risiko :</b> {header.namaPengelola}
               </p>
@@ -351,7 +351,7 @@ export default function TambahProfilRisikoPage() {
           </div>
 
           {/* CARD */}
-          <div className="bg-white p-4 rounded-xl shadow">
+          <div className="bg-white text-black p-4 rounded-xl shadow">
             <div className="flex justify-between mb-3">
               <button
                 onClick={() => router.back()}
@@ -665,7 +665,7 @@ export default function TambahProfilRisikoPage() {
                           <input
                             value={form.kategori || kategoriRisiko}
                             disabled
-                            className="w-full border p-2 rounded bg-gray-100"
+                            className="w-full border p-2 rounded bg-gray-100 text-gray-500"
                           />
                         </div>
 
@@ -673,7 +673,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Nama Kegiatan</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             onChange={(e) => {
                               const val = e.target.value;
                               const selected = kegiatanList.find(
@@ -702,7 +702,7 @@ export default function TambahProfilRisikoPage() {
                             Tujuan Kegiatan Utama
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={form.tujuan}
                             onChange={(e) =>
                               setForm((prev: any) => ({
@@ -727,7 +727,7 @@ export default function TambahProfilRisikoPage() {
                           <label className="text-sm">Nama Paket</label>
 
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             onChange={(e) => {
                               const value = e.target.value;
 
@@ -783,7 +783,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Tahapan Pekerjaan</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={form.tahapan}
                             onChange={(e) => {
                               setSelectedReferensiId("");
@@ -821,7 +821,7 @@ export default function TambahProfilRisikoPage() {
                             Referensi Lost Event
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -840,7 +840,7 @@ export default function TambahProfilRisikoPage() {
                           <label className="text-sm">Pernyataan Risiko</label>
 
                           <select
-                            className="w-full border p-2 rounded bg-white"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={selectedReferensiId}
                             onChange={(e) => {
                               const id = e.target.value;
@@ -888,7 +888,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Penanggung Jawab</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -902,7 +902,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Kategori Dampak</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={form.dampakKategori} // ✅ TAMBAH INI
                             onChange={(e) =>
                               setForm((prev: any) => ({
@@ -913,6 +913,7 @@ export default function TambahProfilRisikoPage() {
                           >
                             <option>Kecelakaan Kerja</option>
                             <option>Reputasi</option>
+                            <option>korupsi</option>
                           </select>
                         </div>
 
@@ -922,7 +923,7 @@ export default function TambahProfilRisikoPage() {
 
                           <select
                             id="dampak"
-                            className="w-full border p-2 rounded bg-white"
+                            className="w-full border p-2 rounded bg-white text-black"
                             value={form.dampak}
                             onChange={(e) =>
                               setForm((prev: any) => ({
@@ -977,7 +978,7 @@ export default function TambahProfilRisikoPage() {
 
                               setStep(2);
                             }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded"
+                            className="bg-blue-600 bg-white text-black px-4 py-2 rounded"
                           >
                             Selanjutnya
                           </button>
@@ -1009,7 +1010,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Jenis Penyebab</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step2Form.jenis}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1022,13 +1023,16 @@ export default function TambahProfilRisikoPage() {
                             <option>Tekanan / Pressure</option>
                             <option>Kesempatan / Opportunity</option>
                             <option>Rasionalisasi</option>
+                             <option>Gaya Hidup</option>
+                            <option>Kapasitas</option>
+                            <option>Arogansi</option>
                           </select>
                         </div>
 
                         <div>
                           <label className="text-sm">Penyebab Risiko</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step2Form.penyebab}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1042,7 +1046,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Uraian Pengendalian</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black "
                             value={step2Form.pengendalian}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1056,7 +1060,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Status</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step2Form.status}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1180,7 +1184,7 @@ export default function TambahProfilRisikoPage() {
                                     kemungkinan: Number(e.target.value),
                                   }))
                                 }
-                                className="w-full border p-2 rounded"
+                                className="w-full border p-2 rounded text-black"
                               >
                                 <option value={1}>
                                   1 - Hampir Tidak Terjadi
@@ -1205,7 +1209,7 @@ export default function TambahProfilRisikoPage() {
                                     dampak: Number(e.target.value),
                                   }))
                                 }
-                                className="w-full border p-2 rounded"
+                                className="w-full border p-2 rounded text-black"
                               >
                                 <option value={1}>1 - Tidak Signifikan</option>
                                 <option value={2}>2 - Minor</option>
@@ -1220,12 +1224,12 @@ export default function TambahProfilRisikoPage() {
                           <div className="grid grid-cols-2 gap-3 mt-3">
                             <textarea
                               placeholder="Penjelasan Tingkat Kemungkinan"
-                              className="border p-2 rounded"
+                              className="border p-2 rounded text-black"
                             />
 
                             <textarea
                               placeholder="Penjelasan Tingkat Dampak"
-                              className="border p-2 rounded"
+                              className="border p-2 rounded text-black"
                             />
                           </div>
 
@@ -1306,7 +1310,7 @@ export default function TambahProfilRisikoPage() {
 
                               setStep(3);
                             }}
-                            className="bg-blue-700 text-white px-4 py-2 rounded"
+                            className="bg-blue-700 text-white px-4 py-2 rounded text-sm "
                           >
                             Selanjutnya
                           </button>
@@ -1322,7 +1326,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Respon Risiko</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step3Form.respon}
                             onChange={(e) =>
                               setStep3Form({ respon: e.target.value })
@@ -1360,7 +1364,7 @@ export default function TambahProfilRisikoPage() {
 
                               setStep(4);
                             }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded"
+                            className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
                           >
                             Selanjutnya
                           </button>
@@ -1380,7 +1384,7 @@ export default function TambahProfilRisikoPage() {
                             Pilih Penyebab Risiko
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.penyebabId}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1402,7 +1406,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Respon Risiko</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.respon}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1421,7 +1425,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Berbagi Risiko</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.berbagi}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1436,7 +1440,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Jenis RTP</label>
                           <input
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.jenisRtp}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1451,7 +1455,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Uraian RTP</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.uraian}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1466,7 +1470,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Indikator Keluaran</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.indikator}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1481,7 +1485,7 @@ export default function TambahProfilRisikoPage() {
                         <div>
                           <label className="text-sm">Periode</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.periode}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1559,7 +1563,7 @@ export default function TambahProfilRisikoPage() {
                               <tr>
                                 <td
                                   colSpan={10}
-                                  className="text-center p-3 text-gray-400"
+                                  className="text-center p-3 text-gray-800"
                                 >
                                   Belum ada data
                                 </td>
@@ -1649,23 +1653,40 @@ export default function TambahProfilRisikoPage() {
                           </h4>
 
                           {/* ALOKASI */}
-                          <textarea
-                            placeholder="Alokasi Sumber Daya"
-                            className="w-full border p-2 rounded mb-3"
-                            value={rtpScore.sumber}
-                            onChange={(e) =>
-                              setRtpScore((prev) => ({
-                                ...prev,
-                                sumber: e.target.value,
-                              }))
-                            }
-                          />
+                          <div className="border rounded p-3 mb-3">
+  <label className="font-semibold text-sm block mb-2">
+    Alokasi Sumber Daya (5M)
+  </label>
+
+  {["Man", "Money", "Method", "Machine", "Material"].map((item) => (
+    <label key={item} className="flex items-center gap-2 mb-2">
+      <input
+        type="checkbox"
+        checked={rtpScore.sumber.includes(item)}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setRtpScore((prev) => ({
+              ...prev,
+              sumber: [...prev.sumber, item],
+            }));
+          } else {
+            setRtpScore((prev) => ({
+              ...prev,
+              sumber: prev.sumber.filter((x) => x !== item),
+            }));
+          }
+        }}
+      />
+      {item}
+    </label>
+  ))}
+</div>
 
                           <div className="grid grid-cols-2 gap-3">
                             <div className="grid grid-cols-2 gap-3 mt-3">
                               <textarea
                                 placeholder="Penjelasan Tingkat Kemungkinan"
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-black"
                                 value={rtpScore.ketK}
                                 onChange={(e) =>
                                   setRtpScore((prev) => ({
@@ -1677,7 +1698,7 @@ export default function TambahProfilRisikoPage() {
 
                               <textarea
                                 placeholder="Penjelasan Tingkat Dampak"
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-black"
                                 value={rtpScore.ketD}
                                 onChange={(e) =>
                                   setRtpScore((prev) => ({
@@ -1689,7 +1710,7 @@ export default function TambahProfilRisikoPage() {
                             </div>
                             {/* KEMUNGKINAN */}
                             <select
-                              className="border p-2 rounded"
+                              className="border p-2 rounded text-black"
                               value={rtpScore.k}
                               onChange={(e) =>
                                 setRtpScore((prev) => ({
@@ -1709,7 +1730,7 @@ export default function TambahProfilRisikoPage() {
 
                             {/* DAMPAK */}
                             <select
-                              className="border p-2 rounded"
+                              className="border p-2 rounded text-black"
                               value={rtpScore.d}
                               onChange={(e) =>
                                 setRtpScore((prev) => ({
@@ -1753,7 +1774,7 @@ export default function TambahProfilRisikoPage() {
 
                           <div className="flex gap-2">
                             <input
-                              className="border p-2 w-full rounded"
+                              className="border p-2 w-full rounded text-black"
                               value={unitForm}
                               onChange={(e) => setUnitForm(e.target.value)}
                             />
@@ -1817,7 +1838,7 @@ export default function TambahProfilRisikoPage() {
                           <label className="text-sm">Klasifikasi</label>
 
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={klasifikasi}
                             onChange={(e) => setKlasifikasi(e.target.value)}
                           >
@@ -1840,7 +1861,7 @@ export default function TambahProfilRisikoPage() {
 
                               <input
                                 type="date"
-                                className="w-full border p-2 rounded mb-3"
+                                className="w-full border p-2 rounded mb-3 text-black"
                                 value={targetForm.waktu}
                                 onChange={(e) =>
                                   setTargetForm((prev) => ({
@@ -1852,7 +1873,7 @@ export default function TambahProfilRisikoPage() {
 
                               <textarea
                                 placeholder="Uraian"
-                                className="w-full border p-2 rounded mb-3"
+                                className="w-full border p-2 rounded mb-3 text-black"
                                 value={targetForm.uraian}
                                 onChange={(e) =>
                                   setTargetForm((prev) => ({

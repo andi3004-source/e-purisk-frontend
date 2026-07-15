@@ -3,16 +3,66 @@
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
-import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 
 export default function ProfilRisikoPage() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const searchParams = useSearchParams();
 
   const komitmenId = searchParams.get("komitmenId");
+
+  const safeArray = (value: any) => {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    return [];
+  };
+
+  const getKategoriClass = (kategori: string) => {
+    switch ((kategori || "").toLowerCase()) {
+      case "risiko spbe":
+        return "bg-indigo-500 text-white";
+      case "risiko layanan":
+        return "bg-cyan-500 text-white";
+      case "risiko reputasi":
+        return "bg-purple-500 text-white";
+      case "keuangan":
+        return "bg-green-500 text-white";
+      case "risiko korupsi":
+        return "bg-red-500 text-white";
+      case "risiko lainnya":
+        return "bg-slate-500 text-white";
+      case "risiko kinerja":
+        return "bg-yellow-400 text-black";
+      case "risiko kecelakaan kerja":
+        return "bg-orange-500 text-white";
+      case "risiko hukum":
+        return "bg-blue-500 text-white";
+      case "umum":
+        return "bg-gray-500 text-white";
+      default:
+        return "bg-gray-200 text-gray-800";
+    }
+  };
+
+  const warnaRisiko = (nilai: number) => {
+    if (nilai >= 20) return "bg-red-600 text-white";
+    if (nilai >= 16) return "bg-orange-400 text-black";
+    if (nilai >= 11) return "bg-yellow-400 text-black";
+    return "bg-green-500 text-white";
+  };
 
   // ======================================
   // STATE
@@ -59,8 +109,9 @@ export default function ProfilRisikoPage() {
   // ======================================
   const filteredRisiko = selectedKomitmen
     ? profilRisiko.filter(
-        (r) => Number(r.komitmenId) === Number(selectedKomitmen),
-      )
+      (r) =>
+        Number(r.komitmen_id || r.komitmenId) === Number(selectedKomitmen),
+    )
     : profilRisiko;
 
   const filteredKorupsi = selectedKomitmenKorupsi
@@ -93,20 +144,28 @@ export default function ProfilRisikoPage() {
   // ======================================
   const fetchProfilRisiko = async () => {
     try {
-      const res = await axios.get(
-  "http://127.0.0.1:8000/api/profil-risiko"
-);
+      const res = await axios.get("http://127.0.0.1:8000/api/profil-risiko");
 
-      console.log("PROFIL RISIKO:", res.data);
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data.data)
+          ? res.data.data
+          : [];
 
-      if (Array.isArray(res.data)) {
-        setProfilRisiko(res.data);
-      } else if (Array.isArray(res.data.data)) {
-        setProfilRisiko(res.data.data);
-      }
+      const mapped = data.map((r: any) => ({
+        ...r,
+        komitmenId: r.komitmen_id || r.komitmenId,
+        dampakKategori: r.dampak_kategori || r.dampakKategori,
+        penanggungJawab: r.penanggung_jawab || r.penanggungJawab,
+        penyebab: safeArray(r.penyebab),
+        pihak: safeArray(r.pihak),
+        rtp: safeArray(r.rtp),
+        unit_tembusan: safeArray(r.unit_tembusan),
+      }));
+
+      setProfilRisiko(mapped);
     } catch (error) {
       console.error(error);
-
       alert("Gagal mengambil profil risiko");
     }
   };
@@ -133,10 +192,12 @@ export default function ProfilRisikoPage() {
   // AUTO SELECT
   // ======================================
   useEffect(() => {
-    if (komitmenId) {
-      setSelectedKomitmen(Number(komitmenId));
-    }
-  }, [komitmenId]);
+  if (komitmenId) {
+    setSelectedKomitmen(Number(komitmenId));
+  } else {
+    setSelectedKomitmen(null);
+  }
+}, [komitmenId]);
 
   // ======================================
   // AUTO DETAIL
@@ -190,7 +251,7 @@ export default function ProfilRisikoPage() {
 
         <div className="p-6 space-y-6 max-w-full">
           {/* ================= PROFIL RISIKO ================= */}
-          <div className="bg-white p-4 rounded-xl shadow mt-6">
+          <div className="bg-white p-4 rounded-xl shadow mt-6 text-black">
             <h2 className="font-bold mb-3">1. Profil Risiko</h2>
 
             {selectedData && (
@@ -229,11 +290,17 @@ export default function ProfilRisikoPage() {
               {/* FILTER */}
               <select
                 value={selectedKomitmen || ""}
-                onChange={(e) =>
-                  setSelectedKomitmen(
-                    e.target.value ? Number(e.target.value) : null,
-                  )
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setSelectedKomitmen(value ? Number(value) : null);
+
+                  if (value) {
+                    router.replace(`${pathname}?komitmenId=${value}`);
+                  } else {
+                    router.replace(pathname);
+                  }
+                }}
                 className="border p-2 rounded"
               >
                 <option value="">Semua Komitmen</option>
@@ -369,7 +436,7 @@ export default function ProfilRisikoPage() {
                   </thead>
 
                   {/* BODY */}
-                  <tbody>
+                  <tbody className="text-black">
                     {filteredRisiko.length === 0 ? (
                       <tr>
                         <td
@@ -382,20 +449,19 @@ export default function ProfilRisikoPage() {
                     ) : (
                       filteredRisiko.map((r, i) => {
                         console.log("DATA R:", r);
-                        const nilai = (Number(r.k) || 0) * (Number(r.d) || 0);
+                        const nilai = Number(r.skor || r.nilai || 0);
 
-                        const nilaiTarget =
-                          (Number(r.rtp_k) || 0) * (Number(r.rtp_d) || 0);
+                        const nilaiTarget = Number(r.rtp_n || 0);
 
                         return (
                           <tr key={i}>
                             <td className="border p-2">{i + 1}</td>
 
                             <td className="border p-2">
-  {typeof r.kode === "object"
-    ? JSON.stringify(r.kode)
-    : r.kode || "-"}
-</td>
+                              {typeof r.kode === "object"
+                                ? JSON.stringify(r.kode)
+                                : r.kode || "-"}
+                            </td>
 
                             <td className="border p-2">
                               {typeof r.tujuan === "object"
@@ -409,21 +475,29 @@ export default function ProfilRisikoPage() {
                                 : r.pernyataan || "-"}
                             </td>
 
-                            <td className="border p-2">
-                              {typeof r.kategori === "object"
-                                ? JSON.stringify(r.kategori)
-                                : r.kategori || "-"}
+                            <td className="border p-2 text-center">
+                              <span
+                                className={`inline-block px-3 py-1 rounded text-xs font-semibold ${getKategoriClass(
+                                  typeof r.kategori === "object"
+                                    ? JSON.stringify(r.kategori)
+                                    : r.kategori || "-"
+                                )}`}
+                              >
+                                {typeof r.kategori === "object"
+                                  ? JSON.stringify(r.kategori)
+                                  : r.kategori || "-"}
+                              </span>
                             </td>
 
                             <td className="border p-2">
                               {Array.isArray(r.penyebab)
                                 ? r.penyebab
-                                    .map((p: any) =>
-                                      typeof p === "object"
-                                        ? p.penyebab || "-"
-                                        : String(p),
-                                    )
-                                    .join(", ")
+                                  .map((p: any) =>
+                                    typeof p === "object"
+                                      ? p.penyebab || "-"
+                                      : String(p),
+                                  )
+                                  .join(", ")
                                 : typeof r.penyebab === "object"
                                   ? r.penyebab?.penyebab || "-"
                                   : r.penyebab || "-"}
@@ -438,71 +512,71 @@ export default function ProfilRisikoPage() {
                             <td className="border p-2">
                               {Array.isArray(r.penyebab)
                                 ? r.penyebab
-                                    .map((p: any) =>
-                                      typeof p === "object"
-                                        ? p.pengendalian || "-"
-                                        : "-",
-                                    )
-                                    .join(", ")
+                                  .map((p: any) =>
+                                    typeof p === "object"
+                                      ? p.pengendalian || "-"
+                                      : "-",
+                                  )
+                                  .join(", ")
                                 : "-"}
                             </td>
 
                             <td className="border p-2">
                               {Array.isArray(r.penyebab)
                                 ? r.penyebab
-                                    .map((p: any) =>
-                                      typeof p === "object"
-                                        ? p.status || "-"
-                                        : "-",
-                                    )
-                                    .join(", ")
+                                  .map((p: any) =>
+                                    typeof p === "object"
+                                      ? p.status || "-"
+                                      : "-",
+                                  )
+                                  .join(", ")
                                 : "-"}
                             </td>
 
                             <td className="border p-2">
-  {typeof r.k === "object"
-    ? JSON.stringify(r.k)
-    : r.k || "-"}
-</td>
-
-                            <td className="border p-2">
-  {typeof r.d === "object"
-    ? JSON.stringify(r.d)
-    : r.d || "-"}
-</td>
-
-                            <td className="border p-2 bg-yellow-300 font-bold">
-                              {nilai}
+                              {typeof r.k === "object"
+                                ? JSON.stringify(r.k)
+                                : r.k || "-"}
                             </td>
 
                             <td className="border p-2">
-  {typeof r.prioritas === "object"
-    ? JSON.stringify(r.prioritas)
-    : r.prioritas || "-"}
-</td>
+                              {typeof r.d === "object"
+                                ? JSON.stringify(r.d)
+                                : r.d || "-"}
+                            </td>
+
+                            <td className={`border p-2 font-bold text-center ${warnaRisiko(nilai)}`}>
+                              {nilai || "-"}
+                            </td>
 
                             <td className="border p-2">
-  {typeof r.respon === "object"
-    ? JSON.stringify(r.respon)
-    : r.respon || "-"}
-</td>
+                              {typeof r.prioritas === "object"
+                                ? JSON.stringify(r.prioritas)
+                                : r.prioritas || "-"}
+                            </td>
+
+                            <td className="border p-2">
+                              {typeof r.respon === "object"
+                                ? JSON.stringify(r.respon)
+                                : r.respon || "-"}
+                            </td>
 
                             <td className="border p-2">-</td>
 
                             <td className="border p-2">-</td>
 
                             <td className="border p-2">
-  {typeof r.respon === "object"
-    ? JSON.stringify(r.respon)
-    : r.respon || "-"}
-</td>
+                              {typeof r.respon === "object"
+                                ? JSON.stringify(r.respon)
+                                : r.respon || "-"}
+                            </td>
 
                             <td className="border p-2">{r.rtp_k}</td>
 
                             <td className="border p-2">{r.rtp_d}</td>
 
-                            <td className="border p-2 bg-green-500 text-white font-bold">
-                              {nilaiTarget}
+                            <td className={`border p-2 font-bold text-center ${warnaRisiko(nilaiTarget)}`}>
+                              {nilaiTarget || "-"}
                             </td>
 
                             <td className="border p-2">
@@ -512,21 +586,21 @@ export default function ProfilRisikoPage() {
                             <td className="border p-2">
                               {Array.isArray(r.rtp)
                                 ? r.rtp
-                                    .flatMap((x: any) => x.target || [])
-                                    .map((t: any) => t.waktu || "-")
-                                    .join(", ")
+                                  .flatMap((x: any) => x.target || [])
+                                  .map((t: any) => t.waktu || "-")
+                                  .join(", ")
                                 : "-"}
                             </td>
 
                             <td className="border p-2">
                               {Array.isArray(r.rtp)
                                 ? r.rtp
-                                    .map((x: any) =>
-                                      typeof x === "object"
-                                        ? x.indikator || "-"
-                                        : "-",
-                                    )
-                                    .join(", ")
+                                  .map((x: any) =>
+                                    typeof x === "object"
+                                      ? x.indikator || "-"
+                                      : "-",
+                                  )
+                                  .join(", ")
                                 : "-"}
                             </td>
                           </tr>

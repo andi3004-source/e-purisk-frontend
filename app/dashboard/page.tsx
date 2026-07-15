@@ -328,74 +328,119 @@ const [user, setUser] = useState<any>(null);
               </h2>
 
             </div>
-             <div className="bg-white p-4 rounded-xl shadow mt-6">
-
-  <h2 className="font-bold mb-4">
-    Upload Dokumen PDF
-  </h2>
-
-  <input
-    type="file"
-    accept=".pdf"
-    onChange={handleUpload}
-    className="border p-2 rounded"
-  />
-
-</div>
-            <div className="bg-white p-4 rounded-xl shadow mt-6">
-
-  <h2 className="font-bold mb-4">
-    Dokumen Terpublikasi
-  </h2>
-
-  <table className="w-full border">
-
-    <thead className="bg-blue-900 text-white">
-      <tr>
-        <th className="p-2">Nama File</th>
-        <th className="p-2">Tanggal</th>
-        <th className="p-2">Status</th>
-        <th className="p-2">Aksi</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {dokumen.map((item) => (
-        <tr key={item.id}>
-          <td className="border p-2">
-            {item.nama}
-          </td>
-
-          <td className="border p-2">
-            {item.tanggal}
-          </td>
-
-          <td className="border p-2">
-            {item.status}
-          </td>
-
-          <td className="border p-2">
-            <a
-              href={item.url}
-              target="_blank"
-              className="bg-blue-600 text-white px-3 py-1 rounded"
-            >
-              Lihat
-            </a>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-
-  </table>
-
-</div>
+             
           </div>
 
           {/* KPI TAMBAHAN dan chart tetap */}
           
         </div>
+                {/* ================= DOKUMEN ================= */}
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
 
+  {/* Upload PDF */}
+  <div className="bg-white p-6 rounded-xl shadow-lg">
+
+    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      Upload Dokumen PDF
+    </h2>
+
+    <input
+      type="file"
+      accept=".pdf"
+      onChange={handleUpload}
+      className="
+        w-full
+        border
+        border-gray-300
+        rounded-lg
+        p-3
+        text-gray-800
+      "
+    />
+
+  </div>
+
+  {/* Tabel Dokumen */}
+  <div className="bg-white p-6 rounded-xl shadow-lg lg:col-span-2">
+
+    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      Dokumen Terpublikasi
+    </h2>
+
+    <div className="overflow-x-auto">
+
+      <table className="w-full border border-gray-300 text-gray-900">
+
+        <thead>
+          <tr className="bg-blue-900 text-white">
+            <th className="px-4 py-3 text-left">Nama File</th>
+            <th className="px-4 py-3 text-center">Tanggal</th>
+            <th className="px-4 py-3 text-center">Status</th>
+            <th className="px-4 py-3 text-center">Aksi</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {dokumen.map((item, index) => (
+            <tr
+              key={item.id}
+              className={`
+                border-b
+                ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                hover:bg-blue-50
+              `}
+            >
+              <td className="px-4 py-3 text-gray-900 font-medium">
+                {item.nama}
+              </td>
+
+              <td className="px-4 py-3 text-center text-gray-700">
+                {item.tanggal}
+              </td>
+
+              <td className="px-4 py-3 text-center">
+                <span className="
+                  bg-green-100
+                  text-green-700
+                  px-3
+                  py-1
+                  rounded-full
+                  text-sm
+                  font-semibold
+                ">
+                  {item.status}
+                </span>
+              </td>
+
+              <td className="px-4 py-3 text-center">
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="
+                    bg-blue-600
+                    hover:bg-blue-700
+                    text-white
+                    px-4
+                    py-2
+                    rounded-lg
+                    font-medium
+                  "
+                >
+                  Lihat
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
       </div>
 
     </div>

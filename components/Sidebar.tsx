@@ -3,6 +3,10 @@
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import axios from "axios";
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -12,11 +16,12 @@ export default function Sidebar() {
   const [openRisiko, setOpenRisiko] = useState(false);
 
   const [role, setRole] = useState("balai");
+  const [komitmenIdAktif, setKomitmenIdAktif] = useState("");
+  const [sudahIsiRisikoKorupsi, setSudahIsiRisikoKorupsi] = useState(false);
+  const [loadingCekKorupsi, setLoadingCekKorupsi] = useState(false);
 
   useEffect(() => {
     const r = localStorage.getItem("role");
-    console.log("ROLE =", r);
-
     setRole(r || "balai");
   }, []);
 
@@ -24,6 +29,98 @@ export default function Sidebar() {
     role === "balai" || role === "user" || role === "admin";
 
   const isVerifikatorRole = role === "verifikator";
+
+  const getKomitmenIdDariUrl = () => {
+    if (typeof window === "undefined") return "";
+
+    const params = new URLSearchParams(window.location.search);
+    return params.get("komitmenId") || "";
+  };
+
+  const buatPathDenganKomitmen = (path: string) => {
+    const id = getKomitmenIdDariUrl();
+
+    if (path.startsWith("/risiko/") && id) {
+      return `${path}?komitmenId=${id}`;
+    }
+
+    return path;
+  };
+
+  const cekKorupsiDiDatabase = async (komitmenIdManual?: string) => {
+    try {
+      setLoadingCekKorupsi(true);
+
+      const idAktif = komitmenIdManual || getKomitmenIdDariUrl();
+
+      setKomitmenIdAktif(idAktif);
+
+      if (!idAktif) {
+        setSudahIsiRisikoKorupsi(false);
+        return false;
+      }
+
+      const res = await axios.get(`${API_URL}/profil-risiko`);
+
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+      console.log("KOMITMEN ID AKTIF:", idAktif);
+      console.log("DATA CEK KORUPSI SIDEBAR:", data);
+
+      const adaKorupsi = data.some((item: any) => {
+        const kategori = String(
+          item?.kategori ||
+            item?.kategori_risiko ||
+            item?.kategoriRisiko ||
+            "",
+        ).toLowerCase();
+
+        const idData = String(
+          item?.komitmen_id ||
+            item?.komitmenId ||
+            item?.id_komitmen ||
+            "",
+        );
+
+        return kategori.includes("korup") && idData === String(idAktif);
+      });
+
+      console.log("ADA KORUPSI DI KOMITMEN INI?", adaKorupsi);
+
+      setSudahIsiRisikoKorupsi(adaKorupsi);
+
+      return adaKorupsi;
+    } catch (error) {
+      console.error("Gagal cek risiko korupsi:", error);
+      setSudahIsiRisikoKorupsi(false);
+      return false;
+    } finally {
+      setLoadingCekKorupsi(false);
+    }
+  };
+
+  useEffect(() => {
+    const jalan = () => {
+      const id = getKomitmenIdDariUrl();
+      setKomitmenIdAktif(id);
+
+      if (id) {
+        cekKorupsiDiDatabase(id);
+      } else {
+        setSudahIsiRisikoKorupsi(false);
+      }
+    };
+
+    jalan();
+
+    const interval = setInterval(jalan, 3000);
+
+    return () => clearInterval(interval);
+  }, [pathname]);
 
   return (
     <div className="w-64 bg-blue-900 text-white min-h-screen flex flex-col">
@@ -45,14 +142,12 @@ export default function Sidebar() {
 
       {/* MENU */}
       <div className="p-4 space-y-2 flex-1">
-        {/* ================= BALAI / USER / ADMIN ================= */}
         {isBalaiRole && (
           <>
             <MenuItem name="Dashboard" path="/dashboard" />
             <MenuItem name="Daftar Pegawai" path="/pegawai" />
             <MenuItem name="Loss Event Database" path="/loss" />
 
-            {/* KOMITMEN */}
             <div>
               <div
                 onClick={() => setOpenKomitmen(!openKomitmen)}
@@ -66,7 +161,6 @@ export default function Sidebar() {
                 <div className="ml-4 mt-2 space-y-2">
                   <SubItem name="Komitmen MR" path="/komitmen" />
 
-                  {/* RISIKO */}
                   <div>
                     <div
                       onClick={() => setOpenRisiko(!openRisiko)}
@@ -82,24 +176,67 @@ export default function Sidebar() {
                           path="/risiko/korupsi"
                         />
 
-                        {[
-                          "Keuangan",
-                          "Reputasi",
-                          "Hukum",
-                          "Kecelakaan Kerja",
-                          "Layanan",
-                          "Kinerja",
-                          "SPBE",
-                          "Lainnya",
-                        ].map((r) => (
-                          <SubItem
-                            key={r}
-                            name={r}
-                            path={`/risiko/${r
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`}
-                          />
-                        ))}
+                        <SubItem
+                          name="Keuangan"
+                          path="/risiko/keuangan"
+                          wajibKorupsi
+                        />
+
+                        <SubItem
+                          name="Reputasi"
+                          path="/risiko/reputasi"
+                          wajibKorupsi
+                        />
+
+                        <SubItem
+                          name="Hukum"
+                          path="/risiko/hukum"
+                          wajibKorupsi
+                        />
+
+                        <SubItem
+                          name="Kecelakaan Kerja"
+                          path="/risiko/kecelakaan-kerja"
+                          wajibKorupsi
+                        />
+
+                        <SubItem
+                          name="Layanan"
+                          path="/risiko/layanan"
+                          wajibKorupsi
+                        />
+
+                        <SubItem
+                          name="Kinerja"
+                          path="/risiko/kinerja"
+                          wajibKorupsi
+                        />
+
+                        <SubItem
+                          name="SPBE"
+                          path="/risiko/spbe"
+                          wajibKorupsi
+                        />
+
+                        <SubItem
+                          name="Lainnya"
+                          path="/risiko/lainnya"
+                          wajibKorupsi
+                        />
+
+                        {!komitmenIdAktif && (
+                          <p className="text-[11px] text-yellow-300 mt-2 leading-relaxed">
+                            Pilih komitmen terlebih dahulu di halaman Risiko
+                            Korupsi.
+                          </p>
+                        )}
+
+                        {komitmenIdAktif && !sudahIsiRisikoKorupsi && (
+                          <p className="text-[11px] text-yellow-300 mt-2 leading-relaxed">
+                            Isi Risiko Korupsi terlebih dahulu untuk membuka
+                            risiko lainnya.
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -113,7 +250,6 @@ export default function Sidebar() {
           </>
         )}
 
-        {/* ================= VERIFIKATOR ================= */}
         {isVerifikatorRole && (
           <>
             <MenuItem name="Dashboard Verifikator" path="/verifikator" />
@@ -130,26 +266,60 @@ export default function Sidebar() {
     return (
       <div
         onClick={() => router.push(path)}
-        className={`p-3 rounded-lg cursor-pointer transition
-          ${isActive ? "bg-blue-700" : "hover:bg-blue-800"}
-        `}
+        className={`p-3 rounded-lg cursor-pointer transition ${
+          isActive ? "bg-blue-700" : "hover:bg-blue-800"
+        }`}
       >
         {name}
       </div>
     );
   }
 
-  function SubItem({ name, path }: any) {
+  function SubItem({ name, path, wajibKorupsi = false }: any) {
     const isActive = pathname === path;
+    const terkunci = wajibKorupsi && !sudahIsiRisikoKorupsi;
+
+    const handleClick = async () => {
+      const idAktif = getKomitmenIdDariUrl();
+
+      if (wajibKorupsi) {
+        if (!idAktif) {
+          alert("Pilih komitmen terlebih dahulu di Risiko Korupsi.");
+          router.push("/risiko/korupsi");
+          return;
+        }
+
+        const adaKorupsi = await cekKorupsiDiDatabase(idAktif);
+
+        if (!adaKorupsi) {
+          alert(
+            "Isi Risiko Korupsi terlebih dahulu pada komitmen ini sebelum membuka risiko lain.",
+          );
+          return;
+        }
+      }
+
+      router.push(buatPathDenganKomitmen(path));
+    };
 
     return (
       <div
-        onClick={() => router.push(path)}
-        className={`p-2 text-sm rounded cursor-pointer transition
-          ${isActive ? "bg-blue-700" : "hover:bg-blue-700"}
-        `}
+        onClick={handleClick}
+        className={`p-2 text-sm rounded transition flex items-center justify-between ${
+          terkunci
+            ? "cursor-pointer bg-blue-950 text-gray-400 opacity-80"
+            : isActive
+              ? "bg-blue-700 cursor-pointer"
+              : "hover:bg-blue-700 cursor-pointer"
+        }`}
       >
-        ➤ {name}
+        <span>➤ {name}</span>
+
+        {loadingCekKorupsi && wajibKorupsi ? (
+          <span className="text-xs">...</span>
+        ) : terkunci ? (
+          <span className="text-xs">🔒</span>
+        ) : null}
       </div>
     );
   }

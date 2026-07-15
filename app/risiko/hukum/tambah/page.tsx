@@ -76,13 +76,13 @@ export default function TambahProfilRisikoPage() {
     periode: "SEMESTER",
   });
   const [rtpScore, setRtpScore] = useState({
-    k: 1,
-    d: 1,
-    n: 1,
-    sumber: "",
-    ketK: "",
-    ketD: "",
-  });
+  k: 1,
+  d: 1,
+  n: 1,
+  sumber: [] as string[],
+  ketK: "",
+  ketD: "",
+});
 
   const [unitForm, setUnitForm] = useState("");
   const [unitList, setUnitList] = useState<any[]>([]);
@@ -313,7 +313,7 @@ const dampakList = referensiList.filter((item: any) => {
           </div>
 
           {/* HEADER */}
-          <div className="bg-white p-4 rounded-xl shadow">
+          <div className="bg-white text-black p-4 rounded-xl shadow">
             <div className="text-sm space-y-2">
               <div>
                 <b>Unit Organisasi :</b> {header.unit}
@@ -332,7 +332,7 @@ const dampakList = referensiList.filter((item: any) => {
 
           {/* PEMILIK */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-xl shadow text-sm">
+            <div className="bg-white text-black p-4 rounded-xl shadow text-sm">
               <p>
                 <b>Nama Pemilik Risiko :</b> {header.namaPemilik}
               </p>
@@ -344,7 +344,7 @@ const dampakList = referensiList.filter((item: any) => {
               </p>
             </div>
 
-            <div className="bg-white p-4 rounded-xl shadow text-sm">
+            <div className="bg-white text-black p-4 rounded-xl shadow text-sm">
               <p>
                 <b>Nama Pengelola Risiko :</b> {header.namaPengelola}
               </p>
@@ -358,7 +358,7 @@ const dampakList = referensiList.filter((item: any) => {
           </div>
 
           {/* CARD */}
-          <div className="bg-white p-4 rounded-xl shadow">
+          <div className="bg-white text-black p-4 rounded-xl shadow">
             <div className="flex justify-between mb-3">
               <button
                 onClick={() => router.back()}
@@ -486,7 +486,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <td className="border p-2">{r.pernyataan}</td>
 
                         <td className="border p-2">
-                          <span className="bg-red-500 text-white px-2 py-1 rounded text-xs">
+                          <span className="bg-red-500 text-white text-black px-2 py-1 rounded text-xs">
                             {r.kategori}
                           </span>
                         </td>
@@ -661,26 +661,26 @@ const dampakList = referensiList.filter((item: any) => {
                   <div className="p-4 space-y-4">
                     {step === 1 && (
                       <>
-                        <div className="bg-blue-50 p-3 text-xs border rounded">
+                        <div className="text-sm font-semibold text-gray-800 font-bold">
                           Step 1: Isi data kegiatan, kategori risiko, dan
                           pernyataan risiko
                         </div>
 
                         {/* KATEGORI (AUTO) */}
                         <div>
-                          <label className="text-sm">Kategori Risiko</label>
+                          <label className="text-sm font-semibold text-gray-800">Kategori Risiko</label>
                           <input
                             value={form.kategori || kategoriRisiko}
                             disabled
-                            className="w-full border p-2 rounded bg-gray-100"
+                            className="w-full border p-2 rounded bg-gray-100 text-black"
                           />
                         </div>
 
                         {/* NAMA KEGIATAN */}
                         <div>
-                          <label className="text-sm">Nama Kegiatan</label>
+                          <label className="text-sm font-semibold text-gray-800">Nama Kegiatan</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             onChange={(e) => {
                               const val = e.target.value;
                               const selected = kegiatanList.find(
@@ -709,7 +709,7 @@ const dampakList = referensiList.filter((item: any) => {
                             Tujuan Kegiatan Utama
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={form.tujuan}
                             onChange={(e) =>
                               setForm((prev: any) => ({
@@ -734,7 +734,7 @@ const dampakList = referensiList.filter((item: any) => {
                           <label className="text-sm">Nama Paket</label>
 
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             onChange={(e) => {
                               const value = e.target.value;
 
@@ -788,9 +788,9 @@ const dampakList = referensiList.filter((item: any) => {
 
                         {/* TAHAPAN */}
                         <div>
-                          <label className="text-sm">Tahapan Pekerjaan</label>
+                          <label className="text-sm font-semibold text-gray-800">Tahapan Pekerjaan</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={form.tahapan}
                             onChange={(e) => {
                               setSelectedReferensiId("");
@@ -828,7 +828,7 @@ const dampakList = referensiList.filter((item: any) => {
                             Referensi Lost Event
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             onChange={(e) =>
                               setForm((prev: any) => ({
                                 ...prev,
@@ -847,7 +847,7 @@ const dampakList = referensiList.filter((item: any) => {
                           <label className="text-sm">Pernyataan Risiko</label>
 
                           <select
-                            className="w-full border p-2 rounded bg-white"
+                            className="w-full border p-2 rounded bg-  hite"
                             value={selectedReferensiId}
                             onChange={(e) => {
                               const id = e.target.value;
@@ -907,9 +907,9 @@ const dampakList = referensiList.filter((item: any) => {
 
                         {/* KATEGORI DAMPAK */}
                         <div>
-                          <label className="text-sm">Kategori Dampak</label>
+                          <label className="text-sm font-semibold text-gray-800">Kategori Dampak</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={form.dampakKategori} // ✅ TAMBAH INI
                             onChange={(e) =>
                               setForm((prev: any) => ({
@@ -920,6 +920,7 @@ const dampakList = referensiList.filter((item: any) => {
                           >
                             <option>Hukum Negara</option>
                             <option>Reputasi</option>
+                            <option>korupsi</option>
                           </select>
                         </div>
 
@@ -929,7 +930,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                           <select
                             id="dampak"
-                            className="w-full border p-2 rounded bg-white"
+                            className="w-full border p-2 rounded  bg-white text-black"
                             value={form.dampak}
                             onChange={(e) => {
                               const selected = referensiList.find(
@@ -992,7 +993,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                               setStep(2);
                             }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded"
+                            className="bg-blue-600 bg-white text-black  px-4 py-2 rounded"
                           >
                             Selanjutnya
                           </button>
@@ -1003,7 +1004,7 @@ const dampakList = referensiList.filter((item: any) => {
                     {step === 2 && (
                       <>
                         {/* INFO */}
-                        <div className="bg-blue-50 p-3 text-xs border rounded">
+                        <div className="bg-blue-50 p-3 text-xs border rounded ">
                           Step 2: Isi penyebab, pengendalian, pihak terlibat,
                           dan skor
                         </div>
@@ -1012,7 +1013,7 @@ const dampakList = referensiList.filter((item: any) => {
                           <label className="text-sm">Pernyataan Risiko</label>
 
                           <textarea
-                            className="w-full border p-2 rounded bg-gray-100"
+                            className="w-full border p-2 rounded bg-gray-100 text-black"
                             value={form.pernyataan}
                             readOnly
                           />
@@ -1024,7 +1025,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Jenis Penyebab</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step2Form.jenis}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1037,13 +1038,16 @@ const dampakList = referensiList.filter((item: any) => {
                             <option>Tekanan / Pressure</option>
                             <option>Kesempatan / Opportunity</option>
                             <option>Rasionalisasi</option>
+                             <option>Gaya Hidup</option>
+                              <option>Kapasitas</option>
+                               <option>Arogansi</option>
                           </select>
                         </div>
 
                         <div>
                           <label className="text-sm">Penyebab Risiko</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step2Form.penyebab}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1057,7 +1061,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Uraian Pengendalian</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step2Form.pengendalian}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1071,7 +1075,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Status</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step2Form.status}
                             onChange={(e) =>
                               setStep2Form((prev) => ({
@@ -1122,7 +1126,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                         {/* TABLE PENYEBAB */}
                         <table className="w-full text-xs border mt-3">
-                          <thead className="bg-purple-800 text-white">
+                          <thead className="bg-purple-800 bg-white text-black text-center">
                             <tr>
                               <th className="p-2 border">No</th>
                               <th className="p-2 border">Jenis</th>
@@ -1195,7 +1199,7 @@ const dampakList = referensiList.filter((item: any) => {
                                     kemungkinan: Number(e.target.value),
                                   }))
                                 }
-                                className="w-full border p-2 rounded"
+                                className="w-full border p-2 rounded text-black"
                               >
                                 <option value={1}>
                                   1 - Hampir Tidak Terjadi
@@ -1220,7 +1224,7 @@ const dampakList = referensiList.filter((item: any) => {
                                     dampak: Number(e.target.value),
                                   }))
                                 }
-                                className="w-full border p-2 rounded"
+                                className="w-full border p-2 rounded text-black"
                               >
                                 <option value={1}>1 - Tidak Signifikan</option>
                                 <option value={2}>2 - Minor</option>
@@ -1235,12 +1239,12 @@ const dampakList = referensiList.filter((item: any) => {
                           <div className="grid grid-cols-2 gap-3 mt-3">
                             <textarea
                               placeholder="Penjelasan Tingkat Kemungkinan"
-                              className="border p-2 rounded"
+                              className="border p-2 rounded text-black"
                             />
 
                             <textarea
                               placeholder="Penjelasan Tingkat Dampak"
-                              className="border p-2 rounded"
+                              className="border p-2 rounded text-black"
                             />
                           </div>
 
@@ -1337,7 +1341,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Respon Risiko</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step3Form.respon}
                             onChange={(e) =>
                               setStep3Form({ respon: e.target.value })
@@ -1395,7 +1399,7 @@ const dampakList = referensiList.filter((item: any) => {
                             Pilih Penyebab Risiko
                           </label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.penyebabId}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1417,7 +1421,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Respon Risiko</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.respon}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1436,7 +1440,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Berbagi Risiko</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.berbagi}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1451,7 +1455,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Jenis RTP</label>
                           <input
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.jenisRtp}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1466,7 +1470,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Uraian RTP</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.uraian}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1481,7 +1485,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Indikator Keluaran</label>
                           <textarea
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.indikator}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1496,7 +1500,7 @@ const dampakList = referensiList.filter((item: any) => {
                         <div>
                           <label className="text-sm">Periode</label>
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={step4Form.periode}
                             onChange={(e) =>
                               setStep4Form((prev) => ({
@@ -1546,7 +1550,7 @@ const dampakList = referensiList.filter((item: any) => {
                                 periode: "SEMESTER",
                               });
                             }}
-                            className="bg-blue-600 text-white px-3 py-1 rounded"
+                            className="bg-blue-600 bg-white text-black px-3 py-1 rounded"
                           >
                             Tambah +
                           </button>
@@ -1554,7 +1558,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                         {/* TABLE */}
                         <table className="w-full text-xs border mt-4">
-                          <thead className="bg-purple-800 text-white">
+                          <thead className="bg-purple-800 bg-white text-black text-center">
                             <tr>
                               <th className="border p-2">No</th>
                               <th className="border p-2">K. Penyebab</th>
@@ -1574,7 +1578,7 @@ const dampakList = referensiList.filter((item: any) => {
                               <tr>
                                 <td
                                   colSpan={10}
-                                  className="text-center p-3 text-gray-400"
+                                  className="text-center p-3 text-gray-800"
                                 >
                                   Belum ada data
                                 </td>
@@ -1604,13 +1608,13 @@ const dampakList = referensiList.filter((item: any) => {
                                         {r.indikator}
                                       </td>
 
-                                      <td className="border p-2 text-center">
+                                      <td className="border p-2 text-center space-x-1">
                                         <button
                                           onClick={() => {
                                             setSelectedRtpId(r.id);
                                             setOpenTargetModal(true);
                                           }}
-                                          className="bg-blue-500 text-white px-2 py-1 rounded text-xs mr-1"
+                                          className="bg-blue-500 bg-white  text-black px-2 py-1 rounded text-xs mr-1"
                                         >
                                           Target
                                         </button>
@@ -1621,7 +1625,7 @@ const dampakList = referensiList.filter((item: any) => {
                                               prev.filter((x) => x.id !== r.id),
                                             )
                                           }
-                                          className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+                                          className="bg-red-500 bg-white  text-black px-2 py-1 rounded text-xs"
                                         >
                                           Hapus
                                         </button>
@@ -1664,23 +1668,40 @@ const dampakList = referensiList.filter((item: any) => {
                           </h4>
 
                           {/* ALOKASI */}
-                          <textarea
-                            placeholder="Alokasi Sumber Daya"
-                            className="w-full border p-2 rounded mb-3"
-                            value={rtpScore.sumber}
-                            onChange={(e) =>
-                              setRtpScore((prev) => ({
-                                ...prev,
-                                sumber: e.target.value,
-                              }))
-                            }
-                          />
+                        <div className="border rounded p-3 mb-3">
+  <label className="font-semibold text-sm block mb-2">
+    Alokasi Sumber Daya (5M)
+  </label>
+
+  {["Man", "Money", "Method", "Machine", "Material"].map((item) => (
+    <label key={item} className="flex items-center gap-2 mb-2">
+      <input
+        type="checkbox"
+        checked={rtpScore.sumber.includes(item)}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setRtpScore((prev) => ({
+              ...prev,
+              sumber: [...prev.sumber, item],
+            }));
+          } else {
+            setRtpScore((prev) => ({
+              ...prev,
+              sumber: prev.sumber.filter((x) => x !== item),
+            }));
+          }
+        }}
+      />
+      {item}
+    </label>
+  ))}
+</div>
 
                           <div className="grid grid-cols-2 gap-3">
                             <div className="grid grid-cols-2 gap-3 mt-3">
                               <textarea
                                 placeholder="Penjelasan Tingkat Kemungkinan"
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-black"
                                 value={rtpScore.ketK}
                                 onChange={(e) =>
                                   setRtpScore((prev) => ({
@@ -1692,7 +1713,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                               <textarea
                                 placeholder="Penjelasan Tingkat Dampak"
-                                className="border p-2 rounded"
+                                className="border p-2 rounded text-black"
                                 value={rtpScore.ketD}
                                 onChange={(e) =>
                                   setRtpScore((prev) => ({
@@ -1704,7 +1725,7 @@ const dampakList = referensiList.filter((item: any) => {
                             </div>
                             {/* KEMUNGKINAN */}
                             <select
-                              className="border p-2 rounded"
+                              className="border p-2 rounded text-black"
                               value={rtpScore.k}
                               onChange={(e) =>
                                 setRtpScore((prev) => ({
@@ -1724,7 +1745,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                             {/* DAMPAK */}
                             <select
-                              className="border p-2 rounded"
+                              className="border p-2 rounded text-black"
                               value={rtpScore.d}
                               onChange={(e) =>
                                 setRtpScore((prev) => ({
@@ -1768,7 +1789,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                           <div className="flex gap-2">
                             <input
-                              className="border p-2 w-full rounded"
+                              className="border p-2 w-full rounded  text-black"
                               value={unitForm}
                               onChange={(e) => setUnitForm(e.target.value)}
                             />
@@ -1832,7 +1853,7 @@ const dampakList = referensiList.filter((item: any) => {
                           <label className="text-sm">Klasifikasi</label>
 
                           <select
-                            className="w-full border p-2 rounded"
+                            className="w-full border p-2 rounded text-black"
                             value={klasifikasi}
                             onChange={(e) => setKlasifikasi(e.target.value)}
                           >
@@ -1855,7 +1876,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                               <input
                                 type="date"
-                                className="w-full border p-2 rounded mb-3"
+                                className="w-full border p-2 rounded mb-3 text-black"
                                 value={targetForm.waktu}
                                 onChange={(e) =>
                                   setTargetForm((prev) => ({
@@ -1867,7 +1888,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                               <textarea
                                 placeholder="Uraian"
-                                className="w-full border p-2 rounded mb-3"
+                                className="w-full border p-2 rounded mb-3 text-black"
                                 value={targetForm.uraian}
                                 onChange={(e) =>
                                   setTargetForm((prev) => ({
@@ -1902,7 +1923,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                                   setTargetForm({ waktu: "", uraian: "" });
                                 }}
-                                className="bg-blue-600 text-white px-3 py-1 rounded"
+                                className="bg-blue-600 text-white px-3 py-1 rounded "
                               >
                                 Tambah +
                               </button>

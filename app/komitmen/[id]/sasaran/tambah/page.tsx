@@ -39,10 +39,7 @@ export default function TambahSasaranPage() {
   // ======================================
   // SUBMIT
   // ======================================
-  const handleSubmit = async (
-    e: any
-  ) => {
-
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     if (!id) return;
@@ -50,68 +47,107 @@ export default function TambahSasaranPage() {
     setLoading(true);
 
     try {
-
       const payload = {
-
         komitmen_id: Number(id),
 
-        sasaran_strategis:
-          form.sasaranStrategis,
 
-        indikator_strategis:
-          form.indikatorStrategis,
+        sasaran_strategis: form.sasaranStrategis,
+        indikator_strategis: form.indikatorStrategis,
 
-        sasaran_program:
-          form.sasaranProgram,
+        sasaran_program: form.sasaranProgram,
+        indikator_program: form.indikatorProgram,
 
-        indikator_program:
-          form.indikatorProgram,
+        sasaran_kegiatan: form.sasaranKegiatan,
+        indikator_kegiatan: form.indikatorKegiatan,
 
-        sasaran_kegiatan:
-          form.sasaranKegiatan,
-
-        indikator_kegiatan:
-          form.indikatorKegiatan,
-
-        // 🔥 FIX NULL
-        sub_indikator:
-          form.subIndikator || "-",
+        sub_indikator: form.subIndikator || "-",
       };
 
-      console.log("PAYLOAD:", payload);
+      console.log("PAYLOAD SASARAN:", payload);
 
       const res = await axios.post(
         "http://127.0.0.1:8000/api/sasaran",
         payload
       );
 
-      console.log("RESPONSE:", res.data);
+      console.log("RESPONSE SASARAN:", res.data);
 
-      alert(
-        "Sasaran berhasil disimpan"
+      const komitmenRes = await axios.get(
+        `http://127.0.0.1:8000/api/komitmen/${id}`
       );
+
+      const komitmenData = komitmenRes.data;
+
+      let sasaranLama: any[] = [];
+
+      try {
+        if (Array.isArray(komitmenData.sasaran)) {
+          sasaranLama = komitmenData.sasaran;
+        } else if (komitmenData.sasaran) {
+          sasaranLama = JSON.parse(komitmenData.sasaran);
+        }
+      } catch {
+        sasaranLama = [];
+      }
+
+      const sasaranBaru = {
+        id: res.data?.data?.id || res.data?.id || Date.now(),
+
+        sasaranStrategis: form.sasaranStrategis,
+        indikatorStrategis: form.indikatorStrategis,
+
+        sasaranProgram: form.sasaranProgram,
+        indikatorProgram: form.indikatorProgram,
+
+        sasaranKegiatan: form.sasaranKegiatan,
+        indikatorKegiatan: form.indikatorKegiatan,
+
+        indikator: [
+          {
+            nama: form.indikatorKegiatan,
+            sub: [
+              {
+                nama: form.subIndikator || "-",
+                kegiatan: [],
+              },
+            ],
+          },
+        ],
+      };
+
+      const gabunganSasaran = [...sasaranLama, sasaranBaru];
+
+      await axios.put(
+        `http://127.0.0.1:8000/api/komitmen/${id}`,
+        {
+          sasaran: JSON.stringify(gabunganSasaran),
+        }
+      );
+
+      alert("Sasaran berhasil disimpan dan masuk ke Komitmen");
 
       router.push(`/komitmen/${id}`);
 
+
     } catch (error: any) {
-
       console.error(error);
-
       console.log(error.response);
+
 
       alert(
         JSON.stringify(
-          error.response?.data,
+          error.response?.data || error.message,
           null,
           2
         )
       );
 
-    } finally {
 
+    } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="flex min-h-screen bg-gray-100">

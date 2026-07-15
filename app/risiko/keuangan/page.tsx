@@ -1,185 +1,189 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
-import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 
-export default function ProfilRisikoPage() {
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+
+const safeArray = (value: any): any[] => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  if (typeof value === "object") return [value];
+
+  return [];
+};
+
+const ambil = (...values: any[]) => {
+  const found = values.find(
+    (v) => v !== undefined && v !== null && String(v).trim() !== "",
+  );
+
+  return found ?? "-";
+};
+
+const textValue = (value: any, fallback = "-") => {
+  if (value === undefined || value === null || value === "") return fallback;
+
+  if (typeof value === "object") {
+    return (
+      value.nama ||
+      value.name ||
+      value.uraian ||
+      value.penyebab ||
+      value.pengendalian ||
+      value.status ||
+      value.jenis ||
+      JSON.stringify(value)
+    );
+  }
+
+  return String(value);
+};
+
+const joinText = (items: any[], picker: (item: any) => any) => {
+  const result = items
+    .map((item) => textValue(picker(item)))
+    .filter((item) => item && item !== "-")
+    .join(", ");
+
+  return result || "-";
+};
+
+const getKategoriColor = (kategori: any) => {
+  const k = String(kategori || "").toLowerCase();
+
+  if (k.includes("korupsi")) return "bg-red-500 text-white";
+  if (k.includes("keuangan")) return "bg-green-500 text-white";
+  if (k.includes("hukum")) return "bg-blue-500 text-white";
+  if (k.includes("kinerja")) return "bg-yellow-400 text-black";
+  if (k.includes("layanan")) return "bg-cyan-500 text-white";
+  if (k.includes("reputasi")) return "bg-purple-500 text-white";
+  if (k.includes("kecelakaan")) return "bg-orange-500 text-white";
+  if (k.includes("spbe")) return "bg-indigo-500 text-white";
+  if (k.includes("lainnya")) return "bg-gray-500 text-white";
+
+  return "bg-gray-500 text-white";
+};
+
+const getNilaiRisikoColor = (nilai: number) => {
+  if (!nilai || nilai <= 0) return "bg-gray-200 text-gray-700";
+  if (nilai >= 20) return "bg-red-800 text-white";
+  if (nilai >= 15) return "bg-red-500 text-white";
+  if (nilai >= 10) return "bg-yellow-400 text-black";
+  if (nilai >= 5) return "bg-blue-600 text-white";
+  return "bg-green-600 text-white";
+};
+
+function ProfilRisikoKeuanganContent() {
   const router = useRouter();
-
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-
   const komitmenId = searchParams.get("komitmenId");
 
-  // ======================================
-  // STATE
-  // ======================================
   const [profilRisiko, setProfilRisiko] = useState<any[]>([]);
-
   const [komitmenList, setKomitmenList] = useState<any[]>([]);
-
   const [selectedKomitmen, setSelectedKomitmen] = useState<number | null>(null);
-
   const [selectedData, setSelectedData] = useState<any>(null);
 
-  const [open, setOpen] = useState(false);
+  const filteredRisiko = useMemo(() => {
+    let result = profilRisiko;
 
-  const [selectedKomitmenKorupsi, setSelectedKomitmenKorupsi] = useState<
-    number | null
-  >(null);
+    result = result.filter((r: any) => {
+      const kategori = String(
+        ambil(r.kategori, r.kategori_risiko, r.kategoriRisiko),
+      ).toLowerCase();
 
-  const [form, setForm] = useState<any>({
-    kode: "",
-    tujuan: "",
-    pernyataan: "",
-    kategori: "",
-    sebab: "",
-    dampak: "",
-    pengendalian: "",
-    status: "",
-    kemungkinan: "",
-    dampakNilai: "",
-    prioritas: "",
-    respon: "",
-    rtpJenis: "",
-    rtpUraian: "",
-    alokasi: "",
-    kTarget: "",
-    dTarget: "",
-    penanggungJawab: "",
-    waktu: "",
-    output: "",
-  });
+      return kategori.includes("keuangan");
+    });
 
-  // ======================================
-  // FILTER
-  // ======================================
-  const filteredRisiko = selectedKomitmen
-    ? profilRisiko.filter(
-        (r) => Number(r.komitmenId) === Number(selectedKomitmen),
-      )
-    : profilRisiko;
+    if (selectedKomitmen) {
+      result = result.filter((r: any) => {
+        const id = ambil(r.komitmen_id, r.komitmenId, r.id_komitmen);
+        return Number(id) === Number(selectedKomitmen);
+      });
+    }
 
-  const filteredKorupsi = selectedKomitmenKorupsi
-    ? profilRisiko.filter((r) => r.komitmenId === selectedKomitmenKorupsi)
-    : profilRisiko;
+    return result;
+  }, [profilRisiko, selectedKomitmen]);
 
-  // ======================================
-  // FETCH KOMITMEN
-  // ======================================
   const fetchKomitmen = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/komitmen");
-
-      console.log("KOMITMEN:", res.data);
+      const res = await axios.get(`${API_URL}/komitmen`);
 
       if (Array.isArray(res.data)) {
         setKomitmenList(res.data);
-      } else if (Array.isArray(res.data.data)) {
+      } else if (Array.isArray(res.data?.data)) {
         setKomitmenList(res.data.data);
+      } else {
+        setKomitmenList([]);
       }
     } catch (error) {
-      console.error(error);
-
-      alert("Gagal mengambil komitmen");
+      console.error("Gagal mengambil komitmen:", error);
     }
   };
 
-  // ======================================
-  // FETCH RISIKO
-  // ======================================
   const fetchProfilRisiko = async () => {
     try {
-      const res = await axios.get(
-  "http://127.0.0.1:8000/api/profil-risiko"
-);
-
-      console.log("PROFIL RISIKO:", res.data);
+      const res = await axios.get(`${API_URL}/profil-risiko`);
 
       if (Array.isArray(res.data)) {
         setProfilRisiko(res.data);
-      } else if (Array.isArray(res.data.data)) {
+      } else if (Array.isArray(res.data?.data)) {
         setProfilRisiko(res.data.data);
+      } else {
+        setProfilRisiko([]);
       }
     } catch (error) {
-      console.error(error);
-
-      alert("Gagal mengambil profil risiko");
+      console.error("Gagal mengambil profil risiko:", error);
     }
   };
 
-  // ======================================
-  // LOAD DATA
-  // ======================================
   useEffect(() => {
     fetchKomitmen();
-
     fetchProfilRisiko();
 
-    // REALTIME
     const interval = setInterval(() => {
       fetchKomitmen();
-
       fetchProfilRisiko();
     }, 3000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // ======================================
-  // AUTO SELECT
-  // ======================================
   useEffect(() => {
-    if (komitmenId) {
-      setSelectedKomitmen(Number(komitmenId));
-    }
-  }, [komitmenId]);
+  if (komitmenId) {
+    setSelectedKomitmen(Number(komitmenId));
+  } else {
+    setSelectedKomitmen(null);
+  }
+}, [komitmenId]);
 
-  // ======================================
-  // AUTO DETAIL
-  // ======================================
   useEffect(() => {
-    if (!selectedKomitmen) return;
+    if (!selectedKomitmen) {
+      setSelectedData(null);
+      return;
+    }
 
     const found = komitmenList.find(
-      (k) => Number(k.id) === Number(selectedKomitmen),
+      (k: any) => Number(k.id) === Number(selectedKomitmen),
     );
 
-    setSelectedData(found);
+    setSelectedData(found || null);
   }, [selectedKomitmen, komitmenList]);
-
-  // ======================================
-  // HANDLE SUBMIT
-  // ======================================
-  const handleSubmit = async () => {
-    try {
-      const payload = {
-        ...form,
-
-        komitmenId: selectedKomitmen,
-      };
-
-      const res = await axios.post(
-        "http://127.0.0.1:8000/api/profil-risiko",
-        payload,
-      );
-
-      console.log(res.data);
-
-      alert("Berhasil tambah risiko");
-
-      fetchProfilRisiko();
-
-      setOpen(false);
-    } catch (error) {
-      console.error(error);
-
-      alert("Gagal simpan risiko");
-    }
-  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -188,71 +192,71 @@ export default function ProfilRisikoPage() {
       <div className="flex-1">
         <Navbar />
 
-        <div className="p-6 space-y-6 max-w-full">
-          {/* ================= PROFIL RISIKO ================= */}
-          <div className="bg-white p-4 rounded-xl shadow mt-6">
-            <h2 className="font-bold mb-3">1. Profil Risiko</h2>
+        <div className="p-6 space-y-6 max-w-full text-gray-900">
+          <div className="bg-white p-4 rounded-xl shadow mt-6 text-gray-900">
+            <h2 className="font-bold mb-3">1. Profil Risiko Keuangan</h2>
 
             {selectedData && (
               <div className="grid grid-cols-2 gap-4 mb-4 text-sm bg-gray-50 p-3 rounded">
                 <div>
                   <p>
-                    <b>Nama Pemilik:</b> {selectedData.pemilik}
+                    <b>Nama Pemilik:</b> {selectedData.pemilik || "-"}
                   </p>
 
                   <p>
-                    <b>Jabatan:</b> {selectedData.jabatan_pemilik}
+                    <b>Jabatan:</b> {selectedData.jabatan_pemilik || "-"}
                   </p>
 
                   <p>
-                    <b>NIP:</b> {selectedData.nip_pemilik}
+                    <b>NIP:</b> {selectedData.nip_pemilik || "-"}
                   </p>
                 </div>
 
                 <div>
                   <p>
-                    <b>Nama Pengelola:</b> {selectedData.pengelola}
+                    <b>Nama Pengelola:</b> {selectedData.pengelola || "-"}
                   </p>
 
                   <p>
-                    <b>Jabatan:</b> {selectedData.jabatan_pengelola}
+                    <b>Jabatan:</b> {selectedData.jabatan_pengelola || "-"}
                   </p>
 
                   <p>
-                    <b>NIP:</b> {selectedData.nip_pengelola}
+                    <b>NIP:</b> {selectedData.nip_pengelola || "-"}
                   </p>
                 </div>
               </div>
             )}
 
             <div className="flex gap-2 mb-3">
-              {/* FILTER */}
               <select
-                value={selectedKomitmen || ""}
-                onChange={(e) =>
-                  setSelectedKomitmen(
-                    e.target.value ? Number(e.target.value) : null,
-                  )
-                }
-                className="border p-2 rounded"
+                value={selectedKomitmen ?? ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setSelectedKomitmen(value ? Number(value) : null);
+
+                  if (value) {
+                    router.replace(`${pathname}?komitmenId=${value}`);
+                  } else {
+                    router.replace(pathname);
+                  }
+                }}
+                className="border p-2 rounded bg-white text-gray-900"
               >
                 <option value="">Semua Komitmen</option>
 
-                {komitmenList.map((k) => (
+                {komitmenList.map((k: any) => (
                   <option key={k.id} value={k.id}>
-                    {k.periode}
-                    {" - "}
-                    {k.unit}
+                    {k.periode} - {k.unit}
                   </option>
                 ))}
               </select>
 
-              {/* TAMBAH */}
               <button
                 onClick={() => {
                   if (!selectedKomitmen) {
                     alert("Pilih komitmen dulu!");
-
                     return;
                   }
 
@@ -272,8 +276,7 @@ export default function ProfilRisikoPage() {
 
             <div className="w-full overflow-hidden rounded-xl border">
               <div className="overflow-x-auto">
-                <table className="min-w-[1800px] text-xs border border-gray-300">
-                  {/* THEAD TETAP */}
+                <table className="min-w-[1800px] text-xs border border-gray-300 text-gray-900">
                   <thead className="bg-purple-800 text-white text-[11px]">
                     <tr>
                       <th rowSpan={2} className="border p-2">
@@ -347,28 +350,18 @@ export default function ProfilRisikoPage() {
 
                     <tr>
                       <th className="border">Uraian</th>
-
                       <th className="border">Status</th>
-
                       <th className="border">K</th>
-
                       <th className="border">D</th>
-
                       <th className="border">Nilai</th>
-
                       <th className="border">Jenis</th>
-
                       <th className="border">Uraian</th>
-
                       <th className="border">K</th>
-
                       <th className="border">D</th>
-
                       <th className="border">Nilai</th>
                     </tr>
                   </thead>
 
-                  {/* BODY */}
                   <tbody>
                     {filteredRisiko.length === 0 ? (
                       <tr>
@@ -380,154 +373,179 @@ export default function ProfilRisikoPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredRisiko.map((r, i) => {
-                        console.log("DATA R:", r);
-                        const nilai = (Number(r.k) || 0) * (Number(r.d) || 0);
+                      filteredRisiko.map((r: any, i: number) => {
+                        const penyebabList = safeArray(
+                          ambil(r.penyebab, r.penyebabList, r.penyebab_risikos),
+                        );
+
+                        const rtpList = safeArray(ambil(r.rtp, r.rtps));
+                        const targetList = rtpList.flatMap((x: any) =>
+                          safeArray(ambil(x.target, x.targetList, x.targets)),
+                        );
+
+                        const k = Number(ambil(r.k, r.K, 0)) || 0;
+                        const d = Number(ambil(r.d, r.D, 0)) || 0;
+
+                        const nilai =
+                          Number(ambil(r.skor, r.nilai, 0)) || k * d;
+
+                        const rtpK = Number(ambil(r.rtp_k, r.rtpK, 0)) || 0;
+                        const rtpD = Number(ambil(r.rtp_d, r.rtpD, 0)) || 0;
 
                         const nilaiTarget =
-                          (Number(r.rtp_k) || 0) * (Number(r.rtp_d) || 0);
+                          Number(
+                            ambil(r.rtp_n, r.nilai_target, r.nilaiTarget, 0),
+                          ) ||
+                          rtpK * rtpD;
 
                         return (
-                          <tr key={i}>
-                            <td className="border p-2">{i + 1}</td>
+                          <tr key={r.id || i}>
+                            <td className="border p-2 text-center">{i + 1}</td>
 
                             <td className="border p-2">
-  {typeof r.kode === "object"
-    ? JSON.stringify(r.kode)
-    : r.kode || "-"}
-</td>
-
-                            <td className="border p-2">
-                              {typeof r.tujuan === "object"
-                                ? JSON.stringify(r.tujuan)
-                                : r.tujuan || "-"}
+                              {textValue(ambil(r.kode, r.kode_risiko))}
                             </td>
 
                             <td className="border p-2">
-                              {typeof r.pernyataan === "object"
-                                ? JSON.stringify(r.pernyataan)
-                                : r.pernyataan || "-"}
+                              {textValue(r.tujuan)}
                             </td>
 
                             <td className="border p-2">
-                              {typeof r.kategori === "object"
-                                ? JSON.stringify(r.kategori)
-                                : r.kategori || "-"}
+                              {textValue(
+                                ambil(r.pernyataan, r.pernyataan_risiko),
+                              )}
+                            </td>
+
+                            <td className="border p-2 text-center">
+                              <span
+                                className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getKategoriColor(
+                                  ambil(
+                                    r.kategori,
+                                    r.kategori_risiko,
+                                    r.kategoriRisiko,
+                                  ),
+                                )}`}
+                              >
+                                {textValue(
+                                  ambil(
+                                    r.kategori,
+                                    r.kategori_risiko,
+                                    r.kategoriRisiko,
+                                  ),
+                                )}
+                              </span>
                             </td>
 
                             <td className="border p-2">
-                              {Array.isArray(r.penyebab)
-                                ? r.penyebab
-                                    .map((p: any) =>
-                                      typeof p === "object"
-                                        ? p.penyebab || "-"
-                                        : String(p),
-                                    )
-                                    .join(", ")
-                                : typeof r.penyebab === "object"
-                                  ? r.penyebab?.penyebab || "-"
-                                  : r.penyebab || "-"}
+                              {penyebabList.length > 0
+                                ? joinText(penyebabList, (p: any) =>
+                                  ambil(p.penyebab, p.uraian, p),
+                                )
+                                : textValue(r.penyebab)}
                             </td>
 
                             <td className="border p-2">
-                              {typeof r.dampak === "object"
-                                ? JSON.stringify(r.dampak)
-                                : r.dampak || "-"}
+                              {textValue(
+                                ambil(
+                                  r.dampak,
+                                  r.dampak_kategori,
+                                  r.dampakKategori,
+                                ),
+                              )}
                             </td>
 
                             <td className="border p-2">
-                              {Array.isArray(r.penyebab)
-                                ? r.penyebab
-                                    .map((p: any) =>
-                                      typeof p === "object"
-                                        ? p.pengendalian || "-"
-                                        : "-",
-                                    )
-                                    .join(", ")
-                                : "-"}
+                              {penyebabList.length > 0
+                                ? joinText(penyebabList, (p: any) =>
+                                  ambil(p.pengendalian, p.pengendalian_risiko),
+                                )
+                                : textValue(r.pengendalian)}
                             </td>
 
                             <td className="border p-2">
-                              {Array.isArray(r.penyebab)
-                                ? r.penyebab
-                                    .map((p: any) =>
-                                      typeof p === "object"
-                                        ? p.status || "-"
-                                        : "-",
-                                    )
-                                    .join(", ")
-                                : "-"}
+                              {penyebabList.length > 0
+                                ? joinText(penyebabList, (p: any) =>
+                                  ambil(p.status, p.status_pengendalian),
+                                )
+                                : textValue(r.status)}
+                            </td>
+
+                            <td className="border p-2 text-center">
+                              {k || "-"}
+                            </td>
+
+                            <td className="border p-2 text-center">
+                              {d || "-"}
+                            </td>
+
+                            <td
+                              className={`border p-2 font-bold text-center ${getNilaiRisikoColor(
+                                nilai,
+                              )}`}
+                            >
+                              {nilai || "-"}
                             </td>
 
                             <td className="border p-2">
-  {typeof r.k === "object"
-    ? JSON.stringify(r.k)
-    : r.k || "-"}
-</td>
-
-                            <td className="border p-2">
-  {typeof r.d === "object"
-    ? JSON.stringify(r.d)
-    : r.d || "-"}
-</td>
-
-                            <td className="border p-2 bg-yellow-300 font-bold">
-                              {nilai}
+                              {textValue(r.prioritas)}
                             </td>
 
                             <td className="border p-2">
-  {typeof r.prioritas === "object"
-    ? JSON.stringify(r.prioritas)
-    : r.prioritas || "-"}
-</td>
-
-                            <td className="border p-2">
-  {typeof r.respon === "object"
-    ? JSON.stringify(r.respon)
-    : r.respon || "-"}
-</td>
-
-                            <td className="border p-2">-</td>
-
-                            <td className="border p-2">-</td>
-
-                            <td className="border p-2">
-  {typeof r.respon === "object"
-    ? JSON.stringify(r.respon)
-    : r.respon || "-"}
-</td>
-
-                            <td className="border p-2">{r.rtp_k}</td>
-
-                            <td className="border p-2">{r.rtp_d}</td>
-
-                            <td className="border p-2 bg-green-500 text-white font-bold">
-                              {nilaiTarget}
+                              {textValue(r.respon)}
                             </td>
 
                             <td className="border p-2">
-                              {r.penanggung_jawab || "-"}
+                              {rtpList.length > 0
+                                ? joinText(rtpList, (x: any) =>
+                                  ambil(x.jenisRtp, x.jenis_rtp, x.jenis),
+                                )
+                                : textValue(ambil(r.rtpJenis, r.rtp_jenis))}
                             </td>
 
                             <td className="border p-2">
-                              {Array.isArray(r.rtp)
-                                ? r.rtp
-                                    .flatMap((x: any) => x.target || [])
-                                    .map((t: any) => t.waktu || "-")
-                                    .join(", ")
-                                : "-"}
+                              {rtpList.length > 0
+                                ? joinText(rtpList, (x: any) => x.uraian)
+                                : textValue(ambil(r.rtpUraian, r.rtp_uraian))}
                             </td>
 
                             <td className="border p-2">
-                              {Array.isArray(r.rtp)
-                                ? r.rtp
-                                    .map((x: any) =>
-                                      typeof x === "object"
-                                        ? x.indikator || "-"
-                                        : "-",
-                                    )
-                                    .join(", ")
-                                : "-"}
+                              {textValue(ambil(r.alokasi, r.sumber))}
+                            </td>
+
+                            <td className="border p-2 text-center">
+                              {rtpK || "-"}
+                            </td>
+
+                            <td className="border p-2 text-center">
+                              {rtpD || "-"}
+                            </td>
+
+                            <td
+                              className={`border p-2 font-bold text-center ${getNilaiRisikoColor(
+                                nilaiTarget,
+                              )}`}
+                            >
+                              {nilaiTarget || "-"}
+                            </td>
+
+                            <td className="border p-2">
+                              {textValue(
+                                ambil(r.penanggung_jawab, r.penanggungJawab),
+                              )}
+                            </td>
+
+                            <td className="border p-2">
+                              {targetList.length > 0
+                                ? joinText(targetList, (t: any) =>
+                                  ambil(t.waktu, t.target_waktu),
+                                )
+                                : textValue(ambil(r.waktu, r.target_waktu))}
+                            </td>
+
+                            <td className="border p-2">
+                              {rtpList.length > 0
+                                ? joinText(rtpList, (x: any) => x.indikator)
+                                : textValue(ambil(r.output, r.indikator))}
                             </td>
                           </tr>
                         );
@@ -541,5 +559,19 @@ export default function ProfilRisikoPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilRisikoPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-100 text-gray-900">
+          Memuat data profil risiko keuangan...
+        </div>
+      }
+    >
+      <ProfilRisikoKeuanganContent />
+    </Suspense>
   );
 }
