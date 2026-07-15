@@ -1,5 +1,6 @@
 "use client";
-
+export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
@@ -7,13 +8,21 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 
 export default function ProfilRisikoPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProfilRisikoPageContent />
+    </Suspense>
+  );
+}
+
+function ProfilRisikoPageContent() {
   const router = useRouter();
   const pathname = usePathname();
 
   const searchParams = useSearchParams();
-
   const komitmenId = searchParams.get("komitmenId");
 
+  
   const safeArray = (value: any) => {
     if (Array.isArray(value)) return value;
     if (!value) return [];
@@ -192,12 +201,12 @@ export default function ProfilRisikoPage() {
   // AUTO SELECT
   // ======================================
   useEffect(() => {
-  if (komitmenId) {
-    setSelectedKomitmen(Number(komitmenId));
+  if (komitmenList) {
+    setSelectedKomitmen(Number(komitmenList));
   } else {
     setSelectedKomitmen(null);
   }
-}, [komitmenId]);
+}, [komitmenList]);
 
   // ======================================
   // AUTO DETAIL
@@ -616,4 +625,4 @@ export default function ProfilRisikoPage() {
       </div>
     </div>
   );
-}
+}  
