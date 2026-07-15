@@ -1,12 +1,20 @@
 "use client";
-
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+import { Suspense, useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 
 export default function ProfilRisikoPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProfilRisikoPageContent />
+    </Suspense>
+  );
+}
+
+function ProfilRisikoPageContent() {
   const router = useRouter();
   const pathname = usePathname();
 
