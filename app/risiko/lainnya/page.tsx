@@ -123,7 +123,7 @@ export default function ProfilRisikoPage() {
   // ======================================
   const fetchKomitmen = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/komitmen");
+      const res = await axios.get("https://idriskterdepan.id/api/komitmen");
 
       console.log("KOMITMEN:", res.data);
 
@@ -144,7 +144,7 @@ export default function ProfilRisikoPage() {
   // ======================================
   const fetchProfilRisiko = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/profil-risiko");
+      const res = await axios.get("https://idriskterdepan.id/api/profil-risiko");
 
       const data = Array.isArray(res.data)
         ? res.data
@@ -224,7 +224,7 @@ export default function ProfilRisikoPage() {
       };
 
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/profil-risiko",
+        "https://idriskterdepan.id/api/profil-risiko",
         payload,
       );
 

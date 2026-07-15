@@ -86,7 +86,7 @@ export default function VerifikatorPage() {
       if (profilRisiko.length === 0 && komitmenIdPDF) {
         try {
           const resProfil = await fetch(
-            `http://127.0.0.1:8000/api/profil-risiko?komitmen_id=${komitmenIdPDF}`,
+            `https://idriskterdepan.id/api/profil-risiko?komitmen_id=${komitmenIdPDF}`,
           );
 
           const jsonProfil = await resProfil.json();
@@ -138,7 +138,7 @@ export default function VerifikatorPage() {
       let ledDataPDF: any[] = [];
 
       try {
-        const resLed = await fetch("http://127.0.0.1:8000/api/loss");
+        const resLed = await fetch("https://idriskterdepan.id/api/loss");
         const jsonLed = await resLed.json();
 
         ledDataPDF = Array.isArray(jsonLed)

@@ -39,7 +39,7 @@ export default  function TambahProfilRisikoPage() {
   const fetchReferensi = async () => {
     try {
       const res = await axios.get(
-        "http://127.0.0.1:8000/api/referensi-risiko?kategori=Risiko Korupsi"
+        "https://idriskterdepan.id/api/referensi-risiko?kategori=Risiko Korupsi"
       );
 
       const data = Array.isArray(res.data)
@@ -136,7 +136,7 @@ const getRiskColor = (nilai:number) => {
     const fetchTahapan = async () => {
       try {
         const res = await axios.get(
-          "http://127.0.0.1:8000/api/tahapan"
+          "https://idriskterdepan.id/api/tahapan"
         );
 
         const data = Array.isArray(res.data)
@@ -168,7 +168,7 @@ const getRiskColor = (nilai:number) => {
           return;
         }
 
-        const res = await axios.get("http://127.0.0.1:8000/api/komitmen");
+        const res = await axios.get("https://idriskterdepan.id/api/komitmen");
         const list = Array.isArray(res.data) ? res.data : res.data.data || [];
 
         setKomitmenList(list);
@@ -210,7 +210,7 @@ const getRiskColor = (nilai:number) => {
   useEffect(() => {
     const fetchPaket = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/paket");
+        const res = await axios.get("https://idriskterdepan.id/api/paket");
 
 
         const data = Array.isArray(res.data)
@@ -370,7 +370,7 @@ console.log("RTP SCORE", rtpScore);
       };
 
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/profil-risiko",
+        "https://idriskterdepan.id/api/profil-risiko",
         payload
       );
 

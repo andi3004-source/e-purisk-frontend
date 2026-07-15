@@ -66,14 +66,14 @@ export default function TambahSasaranPage() {
       console.log("PAYLOAD SASARAN:", payload);
 
       const res = await axios.post(
-        "http://127.0.0.1:8000/api/sasaran",
+        "https://idriskterdepan.id/api/sasaran",
         payload
       );
 
       console.log("RESPONSE SASARAN:", res.data);
 
       const komitmenRes = await axios.get(
-        `http://127.0.0.1:8000/api/komitmen/${id}`
+        `https://idriskterdepan.id/api/komitmen/${id}`
       );
 
       const komitmenData = komitmenRes.data;
@@ -118,7 +118,7 @@ export default function TambahSasaranPage() {
       const gabunganSasaran = [...sasaranLama, sasaranBaru];
 
       await axios.put(
-        `http://127.0.0.1:8000/api/komitmen/${id}`,
+        `https://idriskterdepan.id/api/komitmen/${id}`,
         {
           sasaran: JSON.stringify(gabunganSasaran),
         }

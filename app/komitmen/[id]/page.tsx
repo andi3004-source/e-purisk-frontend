@@ -15,7 +15,7 @@ export default function DetailKomitmenPage() {
   const fetchKomitmen = async () => {
     try {
       const res = await axios.get(
-        `http://127.0.0.1:8000/api/komitmen/${id}`
+        `https://idriskterdepan.id/api/komitmen/${id}`
       );
 
       const data = res.data;
@@ -113,7 +113,7 @@ export default function DetailKomitmenPage() {
       console.log("Kirim pakta:", pakta);
 
       const res = await axios.put(
-        `http://127.0.0.1:8000/api/komitmen/${id}`,
+        `https://idriskterdepan.id/api/komitmen/${id}`,
         {
           pakta: pakta,
         }
@@ -129,7 +129,7 @@ export default function DetailKomitmenPage() {
   const saveTujuan = async () => {
     try {
       await axios.put(
-        `http://127.0.0.1:8000/api/komitmen/${id}`,
+        `https://idriskterdepan.id/api/komitmen/${id}`,
         {
           tujuan,
         }
@@ -153,7 +153,7 @@ export default function DetailKomitmenPage() {
       console.log("KIRIM KE BACKEND:", payload);
 
       const res = await axios.put(
-        `http://127.0.0.1:8000/api/komitmen/${id}`,
+        `https://idriskterdepan.id/api/komitmen/${id}`,
         payload
       );
 

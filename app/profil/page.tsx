@@ -271,7 +271,7 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
     const fetchSasaran = async () => {
       try {
         const res = await axios.get(
-          `http://127.0.0.1:8000/api/sasaran?komitmen_id=${selectedId}`,
+          `https://idriskterdepan.id/api/sasaran?komitmen_id=${selectedId}`,
         );
 
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
@@ -315,7 +315,7 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
     const fetchProfilRisiko = async () => {
       try {
         const res = await axios.get(
-          `http://127.0.0.1:8000/api/profil-risiko?komitmen_id=${selectedId}`,
+          `https://idriskterdepan.id/api/profil-risiko?komitmen_id=${selectedId}`,
         );
 
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
@@ -335,7 +335,7 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
   useEffect(() => {
     const fetchLed = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/loss");
+        const res = await axios.get("https://idriskterdepan.id/api/loss");
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
         setLedData(data);
       } catch (error) {
@@ -349,7 +349,7 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
   useEffect(() => {
     const fetchKomitmen = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/komitmen");
+        const res = await axios.get("https://idriskterdepan.id/api/komitmen");
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
         console.log(res.data);
         setKomitmenList(data);

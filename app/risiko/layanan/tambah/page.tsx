@@ -106,7 +106,7 @@ export default function TambahProfilRisikoPage() {
   useEffect(() => {
     const fetchKomitmen = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/komitmen");
+        const res = await axios.get("https://idriskterdepan.id/api/komitmen");
 
         setKomitmenList(res.data);
       } catch (err) {
@@ -149,7 +149,7 @@ export default function TambahProfilRisikoPage() {
   useEffect(() => {
     const fetchPaket = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/paket");
+        const res = await axios.get("https://idriskterdepan.id/api/paket");
 
         setPaketList(res.data);
       } catch (err) {
@@ -241,7 +241,7 @@ export default function TambahProfilRisikoPage() {
     const fetchReferensiRisiko = async () => {
       try {
         const res = await axios.get(
-          `http://127.0.0.1:8000/api/referensi-risiko?kategori=${encodeURIComponent(kategoriRisiko)}`,
+          `https://idriskterdepan.id/api/referensi-risiko?kategori=${encodeURIComponent(kategoriRisiko)}`,
         );
 
         const data = Array.isArray(res.data) ? res.data : res.data.data || [];
@@ -1998,7 +1998,7 @@ export default function TambahProfilRisikoPage() {
 
                               try {
                                 await axios.post(
-                                  "http://127.0.0.1:8000/api/profil-risiko",
+                                  "https://idriskterdepan.id/api/profil-risiko",
                                   newData,
                                 );
                                 alert("Berhasil disimpan");
