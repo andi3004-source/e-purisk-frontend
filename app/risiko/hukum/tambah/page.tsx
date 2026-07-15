@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
@@ -2031,7 +2032,7 @@ const dampakList = referensiList.filter((item: any) => {
 
                               try {
                                 await axios.post(
-                                  "http://127.0.0.1:8000/api/profil-risiko",
+                                  "https://idriskterdepan.id/api/profil-risiko",
                                   newData,
                                 );
                                 alert("Berhasil disimpan");
