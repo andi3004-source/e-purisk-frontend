@@ -108,7 +108,7 @@ function PegawaiContent() {
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">
-                {greeting} 👋
+                {greeting} 
               </h1>
 
               <p className="text-gray-500 mt-1">
