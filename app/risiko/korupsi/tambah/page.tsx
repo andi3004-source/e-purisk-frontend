@@ -42,31 +42,31 @@ function TambahProfilRisikoPageContent() {
   const [pihakList, setPihakList] = useState<any[]>([]);
   const [referensiList, setReferensiList] = useState<any[]>([]);
   const [pernyataanList, setPernyataanList] = useState<any[]>([]);
-   const [dampakList, setDampakList] = useState<any[]>([]);
-   useEffect(() => {
-  const fetchReferensi = async () => {
-    try {
-      const res = await axios.get(
-        "https://idriskterdepan.id/api/referensi-risiko?kategori=Risiko Korupsi"
-      );
+  const [dampakList, setDampakList] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchReferensi = async () => {
+      try {
+        const res = await axios.get(
+          "https://idriskterdepan.id/api/referensi-risiko?kategori=Risiko Korupsi"
+        );
 
-      const data = Array.isArray(res.data)
-        ? res.data
-        : res.data.data || [];
+        const data = Array.isArray(res.data)
+          ? res.data
+          : res.data.data || [];
 
-      console.log("REFERENSI", data);
+        console.log("REFERENSI", data);
 
-      setReferensiList(data);
-      setPernyataanList(data);
-      setDampakList(data);
+        setReferensiList(data);
+        setPernyataanList(data);
+        setDampakList(data);
 
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  fetchReferensi();
-}, []);
+    fetchReferensi();
+  }, []);
   const searchParams = useSearchParams();
   const [pihakForm, setPihakForm] = useState({
     nama: "",
@@ -89,13 +89,13 @@ function TambahProfilRisikoPageContent() {
     jabatanPengelola: "",
     nipPengelola: "",
   });
-const getRiskColor = (nilai:number) => {
-  if (nilai <= 6) return "bg-green-600 text-white";
-  if (nilai <= 10) return "bg-lime-300 text-black";
-  if (nilai <= 15) return "bg-yellow-400 text-black";
-  if (nilai <= 19) return "bg-orange-400 text-black";
-  return "bg-red-600 text-white";
-};
+  const getRiskColor = (nilai: number) => {
+    if (nilai <= 6) return "bg-green-600 text-white";
+    if (nilai <= 10) return "bg-lime-300 text-black";
+    if (nilai <= 15) return "bg-yellow-400 text-black";
+    if (nilai <= 19) return "bg-orange-400 text-black";
+    return "bg-red-600 text-white";
+  };
   const [form, setForm] = useState<any>({
     kegiatan: "",
     tujuan: "",
@@ -126,13 +126,13 @@ const getRiskColor = (nilai:number) => {
     periode: "SEMESTER",
   });
   const [rtpScore, setRtpScore] = useState({
-  k: 1,
-  d: 1,
-  n: 1,
-  sumber: [] as string[],
-  ketK: "",
-  ketD: "",
-});
+    k: 1,
+    d: 1,
+    n: 1,
+    sumber: [] as string[],
+    ketK: "",
+    ketD: "",
+  });
 
   const [unitForm, setUnitForm] = useState("");
   const [unitList, setUnitList] = useState<any[]>([]);
@@ -254,7 +254,7 @@ const getRiskColor = (nilai:number) => {
       [6, 12, 16, 19, 24],
       [11, 15, 18, 23, 25],
     ];
-console.log("RTP SCORE", rtpScore);
+    console.log("RTP SCORE", rtpScore);
     // index -1 karena array mulai dari 0
     const k = Number(step2Form.kemungkinan) - 1;
     const d = Number(step2Form.dampak) - 1;
@@ -364,7 +364,10 @@ console.log("RTP SCORE", rtpScore);
         rtp_k: rtpScore.k,
         rtp_d: rtpScore.d,
         rtp_n: rtpScore.n,
-        sumber: rtpScore.sumber || "-",
+        sumber:
+          Array.isArray(rtpScore.sumber)
+            ? rtpScore.sumber.join(", ")
+            : rtpScore.sumber || "-",
         klasifikasi: klasifikasi || "-",
 
         sub_proses: lastRisk.subProses || form.subProses || "-",
@@ -633,12 +636,11 @@ console.log("RTP SCORE", rtpScore);
                         <td className="border p-2">{r.k || "-"}</td>
                         <td className="border p-2">{r.d || "-"}</td>
                         <td
-  className={`border p-2 text-center font-bold ${
-    getRiskColor(Number(r.skor))
-  }`}
->
-  {r.skor || "-"}
-</td>
+                          className={`border p-2 text-center font-bold ${getRiskColor(Number(r.skor))
+                            }`}
+                        >
+                          {r.skor || "-"}
+                        </td>
 
                         <td className="border p-2">{r.prioritas || "-"}</td>
 
@@ -659,13 +661,12 @@ console.log("RTP SCORE", rtpScore);
                         {/* 🔥 NILAI RTP */}
                         <td className="border p-2">{r.rtp_k || "-"}</td>
                         <td className="border p-2">{r.rtp_d || "-"}</td>
-                       <td
-  className={`border p-2 text-center font-bold ${
-    getRiskColor(Number(r.rtp_n))
-  }`}
->
-  {r.rtp_n || "-"}
-</td>
+                        <td
+                          className={`border p-2 text-center font-bold ${getRiskColor(Number(r.rtp_n))
+                            }`}
+                        >
+                          {r.rtp_n || "-"}
+                        </td>
 
                         {/* 🔥 PENANGGUNG JAWAB (DARI STEP 1) */}
                         <td className="border p-2">
@@ -1226,7 +1227,7 @@ console.log("RTP SCORE", rtpScore);
                             <option>Tekanan / Pressure</option>
                             <option>Kesempatan / Opportunity</option>
                             <option>Rasionalisasi</option>
-                             <option>Gaya Hidup</option>
+                            <option>Gaya Hidup</option>
                             <option>Kapasitas</option>
                             <option>Arogansi</option>
                           </select>
@@ -1556,13 +1557,12 @@ console.log("RTP SCORE", rtpScore);
                               Skor Risiko (K x D)
                             </label>
 
-                           <input
-  value={step2Form.skor}
-  readOnly
-  className={`w-full border p-2 rounded text-center font-bold ${
-    getRiskColor(step2Form.skor)
-  }`}
-/>
+                            <input
+                              value={step2Form.skor}
+                              readOnly
+                              className={`w-full border p-2 rounded text-center font-bold ${getRiskColor(step2Form.skor)
+                                }`}
+                            />
                           </div>
                         </div>
 
@@ -1973,34 +1973,34 @@ console.log("RTP SCORE", rtpScore);
                           </h4>
 
                           {/* ALOKASI */}
-                        <div className="border rounded p-3 mb-3">
-  <label className="font-semibold text-sm block mb-2">
-    Alokasi Sumber Daya (5M)
-  </label>
+                          <div className="border rounded p-3 mb-3">
+                            <label className="font-semibold text-sm block mb-2">
+                              Alokasi Sumber Daya (5M)
+                            </label>
 
-  {["Man", "Money", "Method", "Machine", "Material"].map((item) => (
-    <label key={item} className="flex items-center gap-2 mb-2">
-      <input
-        type="checkbox"
-        checked={rtpScore.sumber.includes(item)}
-        onChange={(e) => {
-          if (e.target.checked) {
-            setRtpScore((prev) => ({
-              ...prev,
-              sumber: [...prev.sumber, item],
-            }));
-          } else {
-            setRtpScore((prev) => ({
-              ...prev,
-              sumber: prev.sumber.filter((x) => x !== item),
-            }));
-          }
-        }}
-      />
-      {item}
-    </label>
-  ))}
-</div>
+                            {["Man", "Money", "Method", "Machine", "Material"].map((item) => (
+                              <label key={item} className="flex items-center gap-2 mb-2">
+                                <input
+                                  type="checkbox"
+                                  checked={rtpScore.sumber.includes(item)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setRtpScore((prev) => ({
+                                        ...prev,
+                                        sumber: [...prev.sumber, item],
+                                      }));
+                                    } else {
+                                      setRtpScore((prev) => ({
+                                        ...prev,
+                                        sumber: prev.sumber.filter((x) => x !== item),
+                                      }));
+                                    }
+                                  }}
+                                />
+                                {item}
+                              </label>
+                            ))}
+                          </div>
 
                           <div className="grid grid-cols-2 gap-3">
                             <div className="grid grid-cols-2 gap-3 mt-3">
@@ -2069,13 +2069,12 @@ console.log("RTP SCORE", rtpScore);
 
                           {/* NILAI */}
                           {/* NILAI RTP */}
-<input
-  value={rtpScore.n}
-  readOnly
-  className={`w-full border p-2 rounded text-center font-bold ${
-    getRiskColor(rtpScore.n)
-  }`}
-/>
+                          <input
+                            value={rtpScore.n}
+                            readOnly
+                            className={`w-full border p-2 rounded text-center font-bold ${getRiskColor(rtpScore.n)
+                              }`}
+                          />
                         </div>
                         {/* ========================= */}
                         {/* 🟣 UNIT TEMBUSAN */}
