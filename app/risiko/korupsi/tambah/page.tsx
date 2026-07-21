@@ -382,7 +382,14 @@ function TambahProfilRisikoPageContent() {
 
       const res = await axios.post(
         "https://idriskterdepan.id/api/profil-risiko",
-        payload
+        payload,
+        {
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+          withCredentials: false,
+        }
       );
 
       setRisikoList((prev) => {

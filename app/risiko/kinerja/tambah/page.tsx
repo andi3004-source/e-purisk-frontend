@@ -8,7 +8,6 @@ import { Suspense, useEffect, useState } from "react";
 import React from "react";
 import { usePathname } from "next/navigation";
 import axios from "axios";
-import router from "next/router";
 export default function TambahProfilRisikoPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -103,6 +102,7 @@ function TambahProfilRisikoPageContent() {
     uraian: "",
   });
   const pathname = usePathname();
+  const router = useRouter();
   const [referensiList, setReferensiList] = useState<any[]>([]);
   const [selectedReferensiId, setSelectedReferensiId] = useState("");
   const kategoriRisiko = pathname.includes("kinerja")

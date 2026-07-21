@@ -66,7 +66,7 @@ export default function TambahSasaranPage() {
       console.log("PAYLOAD SASARAN:", payload);
 
       const res = await axios.post(
-        "https://idriskterdepan.id/api/sasaran",
+        "https://idriskterdepan.id/sasaran",
         payload
       );
 

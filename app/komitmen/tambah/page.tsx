@@ -14,7 +14,7 @@ export default function TambahKomitmenPage() {
   useEffect(() => {
     const fetchPegawai = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/pegawai", {
+        const res = await fetch("https://idriskterdepan.id/api/pegawai", {
           headers: {
             Accept: "application/json",
           },
@@ -111,7 +111,7 @@ const payload = {
   status: "Draft",
 };
 
-const res = await fetch("http://127.0.0.1:8000/api/komitmen", {
+const res = await fetch("https://idriskterdepan.id/api/komitmen", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
