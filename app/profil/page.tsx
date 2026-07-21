@@ -23,7 +23,31 @@ export default function ProfilPage() {
   const [profilRisiko, setProfilRisiko] = useState<any[]>([]);
   const [jadwalMR, setJadwalMR] = useState<any[]>([]);
   const [ledData, setLedData] = useState<any[]>([]);
+const [komentar, setKomentar] = useState<any>({});
+useEffect(() => {
+    if (!selectedId) return;
 
+    setKomentar({
+        pakta: localStorage.getItem(`komentar-${selectedId}-pakta`) || "",
+        sasaran: localStorage.getItem(`komentar-${selectedId}-sasaran`) || "",
+        pemangku: localStorage.getItem(`komentar-${selectedId}-pemangku`) || "",
+        tujuan: localStorage.getItem(`komentar-${selectedId}-tujuan`) || "",
+        led: localStorage.getItem(`komentar-${selectedId}-led`) || "",
+        risiko: localStorage.getItem(`komentar-${selectedId}-profil-risiko`) || "",
+        korupsi: localStorage.getItem(`komentar-${selectedId}-profil-risiko-korupsi`) || "",
+        jadwal: localStorage.getItem(`komentar-${selectedId}-jadwal`) || "",
+        peta: localStorage.getItem(`komentar-${selectedId}-peta-risiko`) || "",
+    });
+}, [selectedId]);
+console.log("selectedId", selectedId);
+useEffect(() => {
+  if (typeof window === "undefined") return;
+
+  console.log(
+    "pakta",
+    localStorage.getItem(`komentar-${selectedId}-pakta`)
+  );
+}, [selectedId]);
  const [jadwal, setJadwal] = useState([
   {
     no: "1",
@@ -486,7 +510,24 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
         status: "Pending",
         tanggalKirim: new Date().toISOString(),
       });
+     
+    const daftarBagian = [
+      "pakta",
+      "sasaran",
+      "pemangku",
+      "tujuan",
+      "led",
+      "profil-risiko",
+      "profil-risiko-korupsi",
+      "jadwal",
+      "peta-risiko",
+    ];
 
+    daftarBagian.forEach((bagian) => {
+      localStorage.removeItem(`komentar-${komitmen.id}-${bagian}`);
+    });
+
+    setKomentar({});
       alert("Berhasil dikirim ke Verifikator");
     } catch (error) {
       console.error(error);
@@ -653,9 +694,21 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
               {/* 1 PAKTA */}
               <div>
                 <h2 className="font-bold mb-2">1. Pakta Manajemen Risiko</h2>
+
                 <div className="text-sm whitespace-pre-line">{pakta}</div>
               </div>
+                {/* Komentar Verifikator */}
+  {komentar.pakta && (
+    <div className="mt-3 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-3">
+      <p className="font-semibold text-yellow-700">
+        💬 Komentar Verifikator
+      </p>
 
+      <p className="text-sm mt-1">
+        {komentar.pakta}
+      </p>
+    </div>
+  )}
               {/* 2 SASARAN */}
               <div>
                 <h2 className="font-bold mb-2">
@@ -755,6 +808,19 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
                     ))}
                   </tbody>
                 </table>
+
+  {/* Komentar Verifikator */}
+  {komentar.sasaran && (
+    <div className="mt-3 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-3">
+      <p className="font-semibold text-yellow-700">
+        💬 Komentar Verifikator
+      </p>
+
+      <p className="text-sm mt-1">
+        {komentar.sasaran}
+      </p>
+    </div>
+  )}
               </div>
 
               {/* 3 PEMANGKU */}
@@ -793,6 +859,18 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
                     ))}
                   </tbody>
                 </table>
+                 {/* Komentar Verifikator */}
+  {komentar.pemangku && (
+    <div className="mt-3 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-3">
+      <p className="font-semibold text-yellow-700">
+        💬 Komentar Verifikator
+      </p>
+
+      <p className="text-sm mt-1">
+        {komentar.pemangku}
+      </p>
+    </div>
+  )}
               </div>
 
               {/* 4 TUJUAN */}
@@ -803,6 +881,18 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
 
                 <div className="text-sm whitespace-pre-line">{tujuan}</div>
               </div>
+               {/* Komentar Verifikator */}
+  {komentar.tujuan && (
+    <div className="mt-3 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-3">
+      <p className="font-semibold text-yellow-700">
+        💬 Komentar Verifikator
+      </p>
+
+      <p className="text-sm mt-1">
+        {komentar.tujuan}
+      </p>
+    </div>
+  )}
             </div>
           )}
 
@@ -1057,6 +1147,18 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
                 </tbody>
               </table>
             </div>
+              {/* Komentar Verifikator */}
+  {komentar.led && (
+    <div className="mt-3 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-3">
+      <p className="font-semibold text-yellow-700">
+        💬 Komentar Verifikator
+      </p>
+
+      <p className="text-sm mt-1">
+        {komentar.led}
+      </p>
+    </div>
+  )}
           </div>
 
           {/* 7. PROFIL RISIKO KORUPSI */}
@@ -1276,6 +1378,18 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
                 </tbody>
               </table>
             </div>
+               {/* Komentar Verifikator */}
+            {komentar.korupsi && (
+              <div className="mt-3 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-3">
+                <p className="font-semibold text-yellow-700">
+                  💬 Komentar Verifikator
+                </p>
+
+                <p className="text-sm mt-1">
+                  {komentar.korupsi}
+                </p>
+              </div>
+            )}
           </div>
           {/* JADWAL */}
           <p className="font-semibold mb-2">
@@ -1404,6 +1518,18 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
       Simpan Jadwal MR
     </button>
   </div>
+    {/* Komentar Verifikator */}
+  {komentar.jadwal && (
+    <div className="mt-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-3">
+      <p className="font-semibold text-yellow-700">
+        💬 Komentar Verifikator
+      </p>
+
+      <p className="text-sm mt-1">
+        {komentar.jadwal}
+      </p>
+    </div>
+  )}
 </div>
           {/* 🔥 PETA RISIKO */}
           <div className="bg-white rounded-xl shadow p-5">
@@ -1436,6 +1562,18 @@ const toggleCell = (rowIndex: number, colIndex: number) => {
               {renderCell(1, 4)}
               {renderCell(1, 5)}
             </div>
+             {/* Komentar Verifikator */}
+  {komentar.peta && (
+    <div className="mt-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-3">
+      <p className="font-semibold text-yellow-700">
+        💬 Komentar Verifikator
+      </p>
+
+      <p className="text-sm mt-1">
+        {komentar.peta}
+      </p>
+    </div>
+  )}
           </div>
 
           {/* 🔥 STATUS */}

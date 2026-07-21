@@ -45,7 +45,24 @@ export default function DetailVerifikatorPage() {
       }),
     );
   };
+const [showKomentar, setShowKomentar] = useState(false);
+const [bagian, setBagian] = useState("");
+const [komentar, setKomentar] = useState("");
+const bukaKomentar = (section: string) => {
+    setBagian(section);
+    setKomentar("");
+    setShowKomentar(true);
+};
+const kirimKomentar = () => {
+    localStorage.setItem(
+    `komentar-${komitmen?.komitmen_id ?? komitmen?.id}-${bagian}`,
+    komentar
+);
 
+    alert("Komentar berhasil dikirim");
+
+    setShowKomentar(false);
+};
   const pakta = komitmen?.pakta || "";
   const safeArray = (value: any) => {
     if (Array.isArray(value)) return value;
@@ -580,21 +597,63 @@ const getRiskColor = (nilai:number) => {
   };
 
   const handleReject = async () => {
-    try {
-      await updateVerifikatorStatus(String(id), "Rejected");
+const kirimKomentar = () => {
+    console.log("komitmen_id =", komitmen?.komitmen_id);
+    console.log("bagian =", bagian);
 
-      alert("Komitmen berhasil di Reject");
-      router.push("/verifikator");
-    } catch (error) {
-      console.error(error);
-      alert("Gagal reject");
-    }
-  };
+    localStorage.setItem(
+    `komentar-${komitmen?.komitmen_id ?? komitmen?.id}-${bagian}`,
+    komentar
+);
 
-  if (!komitmen) {
-    return <div className="p-10">Loading...</div>;
+    console.log(
+        localStorage.getItem(`komentar-${id}-${bagian}`)
+    );
+
+    alert("Komentar berhasil dikirim");
+};
+  const daftarBagian = [
+    "pakta",
+    "sasaran",
+    "pemangku",
+    "tujuan",
+    "led",
+    "profil-risiko",
+    "profil-risiko-korupsi",
+    "jadwal",
+    "peta-risiko",
+  ];
+
+  const keyId = komitmen?.komitmen_id ?? komitmen?.id;
+
+const adaKomentar = daftarBagian.some((bagian) =>
+    localStorage.getItem(`komentar-${keyId}-${bagian}`)
+);
+
+  if (!adaKomentar) {
+    alert("Silakan isi minimal satu komentar sebelum melakukan Reject.");
+    return;
   }
 
+  try {
+    await updateVerifikatorStatus(String(id), "Rejected");
+
+    alert("Komitmen berhasil di Reject");
+
+    router.push("/verifikator");
+
+  } catch (error) {
+    console.error(error);
+    alert("Gagal reject");
+  }
+};
+if (!komitmen) {
+  return (
+    <div className="p-6">
+      Loading...
+    </div>
+  );
+}
   return (
     <div className="flex min-h-screen bg-gray-100">
       <Sidebar />
@@ -632,17 +691,36 @@ const getRiskColor = (nilai:number) => {
                 </p>
               </div>
               {/* 1 PAKTA */}
-              <div>
-                <h2 className="font-bold mb-2">1. Pakta Manajemen Risiko</h2>
-                <div className="text-sm whitespace-pre-line">{pakta}</div>
-              </div>
+<div>
+  <div className="flex justify-between items-center mb-2">
+    <h2 className="font-bold">
+      1. Pakta Manajemen Risiko
+    </h2>
+
+    <button
+      onClick={() => bukaKomentar("pakta")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+    >
+      💬 Komentar
+    </button>
+  </div>
+
+  <div className="text-sm whitespace-pre-line">
+    {pakta}
+  </div>
+</div>
 
               {/* 2 SASARAN */}
               <div>
                 <h2 className="font-bold mb-2">
                   2. Sasaran Strategis / Program UPR
                 </h2>
-
+              <button
+      onClick={() => bukaKomentar("sasaran")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+    >
+      💬 Komentar
+    </button>
                 <table className="w-full border text-xs">
                   <thead className="bg-purple-700 text-white text-xs">
                     <tr>
@@ -741,7 +819,12 @@ const getRiskColor = (nilai:number) => {
               {/* 3 PEMANGKU */}
               <div>
                 <h2 className="font-bold mb-2">3. Daftar Pemangku Kepentingan</h2>
-
+                     <button
+      onClick={() => bukaKomentar("pemangku")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition"
+    >
+      💬 Komentar
+    </button>
                 <table className="w-full border text-xs">
                   <thead className="bg-purple-800 text-white">
                     <tr>
@@ -779,7 +862,12 @@ const getRiskColor = (nilai:number) => {
                 <h2 className="font-bold mb-2">
                   4. Tujuan Pelaksanaan Manajemen Risiko
                 </h2>
-
+                   <button
+      onClick={() => bukaKomentar("tujuan")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition"
+    >
+      💬 Komentar
+    </button>
                 <div className="text-sm whitespace-pre-line">{tujuan}</div>
               </div>
             </div>
@@ -787,7 +875,12 @@ const getRiskColor = (nilai:number) => {
             {/* 5 LOSS EVENT DATABASE */}
             <div>
               <h2 className="font-bold mb-2">5. Loss Event Database (LED)</h2>
-
+                   <button
+      onClick={() => bukaKomentar("led")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition"
+    >
+      💬 Komentar
+    </button>
               <div className="overflow-x-auto">
                 <table className="w-full border text-xs">
                   <thead className="bg-purple-800 text-white">
@@ -840,7 +933,12 @@ const getRiskColor = (nilai:number) => {
             {/* 5 RISIKO */}
             <div>
               <h2 className="font-bold mb-2">6. Profil Risiko</h2>
-
+                    <button
+      onClick={() => bukaKomentar("profil-risiko")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition"
+    >
+      💬 Komentar
+    </button>
               {/* VALIDASI */}
               {(() => {
                 const data = profilRisiko;
@@ -1038,7 +1136,12 @@ const getRiskColor = (nilai:number) => {
             {/* 6 PROFIL RISIKO KORUPSI */}
             <div className="mt-6">
               <h2 className="font-bold mb-2">7. Profil Risiko Korupsi</h2>
-
+                       <button
+      onClick={() => bukaKomentar("profil-risiko-korupsi")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition"
+    >
+      💬 Komentar
+    </button>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-xs border border-gray-300">
                   {/* ================= HEADER ================= */}
@@ -1257,7 +1360,12 @@ const getRiskColor = (nilai:number) => {
             <p className="font-semibold mb-2">
               Jadwal Pelaksanaan Manajemen Risiko
             </p>
-
+                     <button
+    onClick={() => bukaKomentar("jadwal")}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition"
+  >
+    💬 Komentar
+  </button>
             <table className="text-xs border min-w-[1200px]">
                 <thead>
                   <tr className="bg-blue-900 text-white">
@@ -1312,7 +1420,12 @@ const getRiskColor = (nilai:number) => {
               <h2 className="font-semibold mb-3 text-gray-900">
                 Peta Risiko
               </h2>
-
+                    <button
+      onClick={() => bukaKomentar("peta-risiko")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition"
+    >
+      💬 Komentar
+    </button>
               <div className="overflow-x-auto">
                 <div className="grid grid-cols-5 w-full rounded overflow-hidden min-w-[900px]">
                  {[5,4,3,2,1].flatMap((k) =>
@@ -1323,6 +1436,46 @@ const getRiskColor = (nilai:number) => {
             </div>
 
           </div>
+          {/* ===== MODAL KOMENTAR ===== */}
+{showKomentar && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-lg w-[500px] p-6">
+
+      <h2 className="text-xl font-bold mb-4">
+        Komentar Verifikator
+      </h2>
+
+      <p className="text-sm text-gray-500 mb-2">
+        Bagian: <b>{bagian}</b>
+      </p>
+
+      <textarea
+        value={komentar}
+        onChange={(e) => setKomentar(e.target.value)}
+        rows={6}
+        className="w-full border rounded p-3"
+        placeholder="Tulis komentar..."
+      />
+
+      <div className="flex justify-end gap-3 mt-5">
+        <button
+          onClick={() => setShowKomentar(false)}
+          className="border px-4 py-2 rounded"
+        >
+          Batal
+        </button>
+
+        <button
+          onClick={kirimKomentar}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Kirim
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
 
           <div className="flex gap-3 mt-6">
             <button
